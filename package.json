@@ -1,0 +1,28 @@
+{
+  "name": "CampusExchangeServer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "babel": "babel  ./src/app.ts  --watch --out-file ./dist/app.js",
+    "dev":"node ./dist/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.11.0",
+    "koa-route": "^3.2.0",
+    "koa-router": "^8.0.7",
+    "tsscmp": "^1.0.6"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "@babel/preset-typescript": "^7.8.3",
+    "@types/koa": "^2.11.1",
+    "@types/koa-route": "^3.2.4",
+    "@types/koa-router": "^7.4.0"
+  }
+}
