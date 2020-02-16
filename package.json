@@ -15,6 +15,7 @@
     "koa-bodyparser": "^4.2.1",
     "koa-route": "^3.2.0",
     "koa-router": "^8.0.7",
+    "mysql": "^2.18.1",
     "tsscmp": "^1.0.6"
   },
   "devDependencies": {
@@ -28,6 +29,7 @@
     "@types/koa": "^2.11.1",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-route": "^3.2.4",
-    "@types/koa-router": "^7.4.0"
+    "@types/koa-router": "^7.4.0",
+    "@types/mysql": "^2.15.8"
   }
 }
