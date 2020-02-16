@@ -1,7 +1,7 @@
 const dev_mysql_server: string = '127.0.0.1'
-const cloud_mysql_server: string = '1'
+const cloud_mysql_server: string = '193.112.180.170'
 
-const mysql_server: string = dev_mysql_server
+const mysql_server: string = cloud_mysql_server
 const port: number = 3306
 const user:string='root'
 let password:string=''

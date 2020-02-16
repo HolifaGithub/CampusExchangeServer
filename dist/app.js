@@ -46,7 +46,7 @@ function () {
             requestBody = ctx.request.body;
 
             if (!requestBody.code) {
-              _context.next = 47;
+              _context.next = 48;
               break;
             }
 
@@ -68,7 +68,7 @@ function () {
             _result$data = result.data, openid = _result$data.openid, session_key = _result$data.session_key;
 
             if (!(openid && session_key)) {
-              _context.next = 45;
+              _context.next = 46;
               break;
             }
 
@@ -76,7 +76,7 @@ function () {
             checkSignatureResult = (0, _checkSignature.checkSignature)(signature, rawData, session_key);
 
             if (!checkSignatureResult) {
-              _context.next = 43;
+              _context.next = 44;
               break;
             }
 
@@ -93,6 +93,7 @@ function () {
 
           case 20:
             result1 = _context.sent;
+            console.log("aa", result1);
 
             if (result1.length === 0) {
               isNewUser = true;
@@ -102,15 +103,15 @@ function () {
 
 
             if (isNewUser) {
-              _context.next = 29;
+              _context.next = 30;
               break;
             }
 
             sql2 = "DELETE FROM user_info WHERE open_id = ?";
-            _context.next = 26;
+            _context.next = 27;
             return (0, _transformPoolQuery["default"])(sql2, [openid]);
 
-          case 26:
+          case 27:
             result2 = _context.sent;
             console.log("result2：", result2);
 
@@ -120,17 +121,17 @@ function () {
               isDeleteSuccess = false;
             }
 
-          case 29:
+          case 30:
             if (!(!isNewUser && isDeleteSuccess || isNewUser)) {
-              _context.next = 35;
+              _context.next = 36;
               break;
             }
 
             sql3 = "INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?)";
-            _context.next = 33;
+            _context.next = 34;
             return (0, _transformPoolQuery["default"])(sql3, [openid, nickName, gender, country, province, city, avatarUrl]);
 
-          case 33:
+          case 34:
             result3 = _context.sent;
 
             if (result3.affectedRows === 1) {
@@ -146,38 +147,38 @@ function () {
               ctx.response.body = '数据库操作失败！';
             }
 
-          case 35:
-            _context.next = 41;
+          case 36:
+            _context.next = 42;
             break;
 
-          case 37:
-            _context.prev = 37;
+          case 38:
+            _context.prev = 38;
             _context.t0 = _context["catch"](16);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '数据库操作失败！';
 
-          case 41:
-            _context.next = 45;
+          case 42:
+            _context.next = 46;
             break;
 
-          case 43:
+          case 44:
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '您的签名signature有误!';
 
-          case 45:
-            _context.next = 49;
+          case 46:
+            _context.next = 50;
             break;
 
-          case 47:
+          case 48:
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '您请求的用户code有误!';
 
-          case 49:
+          case 50:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, null, [[16, 37]]);
+    }, _callee, null, [[16, 38]]);
   }));
 
   return function login(_x, _x2) {

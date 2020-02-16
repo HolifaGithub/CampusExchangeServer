@@ -5,8 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.connectionLimit = exports.database = exports.password = exports.user = exports.port = exports.mysql_server = void 0;
 var dev_mysql_server = '127.0.0.1';
-var cloud_mysql_server = '1';
-var mysql_server = dev_mysql_server;
+var cloud_mysql_server = '193.112.180.170';
+var mysql_server = cloud_mysql_server;
 exports.mysql_server = mysql_server;
 var port = 3306;
 exports.port = port;

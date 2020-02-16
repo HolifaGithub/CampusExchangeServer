@@ -43,6 +43,7 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     //1.先去查询数据库是否有该用户的记录，如果没有则是新用户，如果有就是老用户
                     const sql1 = `select * from user_info where open_id = ?`
                     const result1 = await transformPoolQuery(sql1, [openid])
+                    console.log("aa",result1)
                     if (result1.length === 0) {
                         isNewUser = true
                     } else {
