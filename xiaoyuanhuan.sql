@@ -10,5 +10,15 @@ CREATE TABLE user_info(
     country VARCHAR(20) NOT NULL,
     province VARCHAR(20) NOT NULL,
     city VARCHAR(30) NOT NULL,
-    avatar_url TEXT NOT NULL
+    avatar_url TEXT NOT NULL,
+    school VARCHAR(20) NOT NULL,
+    id VARCHAR(20) NOT NULL,
+    education VARCHAR(30) NOT NULL,
+    grade VARCHAR(10) NOT NULL,
+    collage VARCHAR(30) NOT NULL,
+    class VARCHAR(20) NOT NULL,
+    user_name VARCHAR(15) NOT NULL,
+    id_card VARCHAR(18) NOT NULL,
+    phone VARCHAR(11) NOT NULL,
+    user_address CHAR(30) NOT NULL 
 );
