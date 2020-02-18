@@ -10,10 +10,6 @@ var _koa = _interopRequireDefault(require("koa"));
 
 var _koaRoute = _interopRequireDefault(require("koa-route"));
 
-var _fs = _interopRequireDefault(require("fs"));
-
-var _path = _interopRequireDefault(require("path"));
-
 var _checkSignature = require("./utils/check-signature");
 
 var _WXBizDataCrypt = require("./utils/WXBizDataCrypt");
@@ -23,8 +19,6 @@ var _transformPoolQuery = _interopRequireDefault(require("./utils/transformPoolQ
 var _getOpenIdAndSessionKey = _interopRequireDefault(require("./utils/getOpenIdAndSessionKey"));
 
 var _uploadCos = _interopRequireDefault(require("./utils/upload-cos"));
-
-var _downloadCos = _interopRequireDefault(require("./utils/download-cos"));
 
 var _miniProgramInfo = require("./static-name/mini-program-info");
 
@@ -284,16 +278,68 @@ function () {
   var _ref3 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee3(ctx, next) {
-    var requestBody;
+    var requestBody, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code, result, openid, sql, poolResult;
     return _regenerator["default"].wrap(function _callee3$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
             requestBody = ctx.request.body;
-            console.log(requestBody);
-            ctx.response.body = "success";
+            typeOne = requestBody.typeOne, typeTwo = requestBody.typeTwo, typeThree = requestBody.typeThree, nameInput = requestBody.nameInput, goodsNumber = requestBody.goodsNumber, newAndOldDegree = requestBody.newAndOldDegree, mode = requestBody.mode, objectOfPayment = requestBody.objectOfPayment, payForMePrice = requestBody.payForMePrice, payForOtherPrice = requestBody.payForOtherPrice, wantExchangeGoods = requestBody.wantExchangeGoods, describe = requestBody.describe, picsLocation = requestBody.picsLocation, orderId = requestBody.orderId, code = requestBody.code;
 
-          case 3:
+            if (!code) {
+              _context3.next = 20;
+              break;
+            }
+
+            _context3.next = 5;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 5:
+            result = _context3.sent;
+            openid = result.openid;
+
+            if (!openid) {
+              _context3.next = 15;
+              break;
+            }
+
+            sql = "INSERT INTO goods(order_id,order_time,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            _context3.next = 11;
+            return (0, _transformPoolQuery["default"])(sql, [orderId, openid, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation]);
+
+          case 11:
+            poolResult = _context3.sent;
+
+            if (poolResult.affectedRows === 1) {
+              console.log('/releasegoods:用户发布商品成功！');
+              ctx.response.status = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            } else {
+              console.log("/releasegoods:用户发布商品失败！");
+              ctx.response.status = _userStatus.statusCodeList.fail;
+              ctx.response.body = _userStatus.statusList.fail;
+            }
+
+            _context3.next = 18;
+            break;
+
+          case 15:
+            console.log('/releasegoods:获取openid失败！');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/releasegoods:获取openid失败！';
+
+          case 18:
+            _context3.next = 23;
+            break;
+
+          case 20:
+            console.log('/releasegoods:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/releasegoods:您请求的用户code有误!';
+
+          case 23:
           case "end":
             return _context3.stop();
         }
@@ -312,43 +358,42 @@ function () {
   var _ref4 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee4(ctx, next) {
-    var file, upLoadCosResult, downLoadCosResult;
+    var file, upLoadCosResult, location;
     return _regenerator["default"].wrap(function _callee4$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
-            file = ctx.request.files.pic1;
+            file = ctx.request.files.pic;
             _context4.next = 3;
             return (0, _uploadCos["default"])(file);
 
           case 3:
             upLoadCosResult = _context4.sent;
 
-            if (!(upLoadCosResult.statusCode === 200)) {
-              _context4.next = 11;
-              break;
-            }
+            if (upLoadCosResult.statusCode === 200) {
+              //如果状态码是200则说明图片上传cos成功
+              location = upLoadCosResult.Location;
+              console.log('/releasegoodspics:图片上传腾讯云对象存储成功！');
+              ctx.response.status = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                location: location
+              };
+            } else {
+              console.log('/releasegoodspics:图片上传腾讯云对象存储失败！');
+              ctx.response.status = _userStatus.statusCodeList.fail;
+              ctx.response.body = '/releasegoodspics:图片上传腾讯云对象存储失败！';
+            } // // 创建可读流 
+            // const reader = fs.createReadStream(file.path)
+            // let filePath = path.join(__dirname, '../upload') + `/${file.name}`
+            // // 创建可写流 
+            // const upStream = fs.createWriteStream(filePath);
+            // // 可读流通过管道写入可写流 
+            // reader.pipe(upStream);
+            // ctx.response.body = "上传成功";
 
-            _context4.next = 7;
-            return (0, _downloadCos["default"])(file.name);
 
-          case 7:
-            downLoadCosResult = _context4.sent;
-
-            _fs["default"].writeFile(_path["default"].resolve(__dirname, '../download/pic1.png'), downLoadCosResult, 'utf-8', function (err) {
-              if (err) throw err;
-              console.log("hh");
-            });
-
-            _context4.next = 14;
-            break;
-
-          case 11:
-            console.log('/releasegoodspics:图片上传腾讯云对象存储失败！');
-            ctx.response.status = _userStatus.statusCodeList.fail;
-            ctx.response.body = '/releasegoodspics:图片上传腾讯云对象存储失败！';
-
-          case 14:
+          case 5:
           case "end":
             return _context4.stop();
         }

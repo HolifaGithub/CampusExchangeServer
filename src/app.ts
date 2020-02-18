@@ -139,19 +139,45 @@ const register = async (ctx: Koa.Context, next: () => Promise<any>) => {
 
 const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
     const requestBody = ctx.request.body
-    console.log(requestBody)
-    ctx.response.body = "success"
+    const { typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code } = requestBody
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        if (openid) {
+            const sql=`INSERT INTO goods(order_id,order_time,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+            const poolResult = await transformPoolQuery(sql, [orderId,openid,typeOne,typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation])
+            if (poolResult.affectedRows === 1) {
+                console.log('/releasegoods:用户发布商品成功！')
+                ctx.response.status = statusCodeList.success
+                ctx.response.body = { status: statusList.success }
+            } else {
+                console.log("/releasegoods:用户发布商品失败！")
+                ctx.response.status = statusCodeList.fail
+                ctx.response.body = statusList.fail
+            }
+        } else {
+            console.log('/releasegoods:获取openid失败！')
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/releasegoods:获取openid失败！'
+        }
+    } else {
+        console.log('/releasegoods:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/releasegoods:您请求的用户code有误!'
+    }
 }
 const releasegoodspics = async (ctx, next: () => Promise<any>) => {
-    const file = ctx.request.files.pic1
-    const upLoadCosResult=await upLoadCos(file)
-    if(upLoadCosResult.statusCode===200){  //如果状态码是200则说明图片上传cos成功
-        let downLoadCosResult=await downLoadCos(file.name)
-        fs.writeFile(path.resolve(__dirname,'../download/pic1.png'), downLoadCosResult,'utf-8' ,function(err){
-            if(err) throw err
-            console.log("hh")
-        })
-    }else{
+    const file = ctx.request.files.pic
+    const upLoadCosResult = await upLoadCos(file)
+    if (upLoadCosResult.statusCode === 200) {  //如果状态码是200则说明图片上传cos成功
+        const location = upLoadCosResult.Location
+        console.log('/releasegoodspics:图片上传腾讯云对象存储成功！')
+        ctx.response.status = statusCodeList.success
+        ctx.response.body = {
+            status: statusList.success,
+            location: location
+        }
+    } else {
         console.log('/releasegoodspics:图片上传腾讯云对象存储失败！')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/releasegoodspics:图片上传腾讯云对象存储失败！'
