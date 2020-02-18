@@ -1,17 +1,23 @@
 import Koa from 'koa'
 import route from 'koa-route'
-import bodyParse from 'koa-bodyparser'
+// import bodyParse from 'koa-bodyparser'
+const body = require('koa-body')
+import fs from 'fs'
+import path from 'path'
 import axios from '../node_modules/_@types_axios@0.14.0@@types/axios/node_modules/axios/index'
 import { checkSignature } from './utils/check-signature'
 import { WXBizDataCrypt } from './utils/WXBizDataCrypt'
 import transformPoolQuery from './utils/transformPoolQuery'
 import getOpenIdAndSessionKey from './utils/getOpenIdAndSessionKey'
+import upLoadCos from './utils/upload-cos'
+import downLoadCos from './utils/download-cos'
 import { appId, appSecret } from './static-name/mini-program-info'
 import { statusCodeList, statusList } from './static-name/user-status'
 
 
 const app = new Koa()
-app.use(bodyParse())
+app.use(body({ multipart: true }))
+// app.use(bodyParse())
 
 const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
     let isNewUser = true
@@ -88,32 +94,32 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
 const register = async (ctx: Koa.Context, next: () => Promise<any>) => {
     const requestBody = ctx.request.body
     if (requestBody.code) {
-        const { code, selectedSchool, studentId, education, grade, collage,userClass, name, idCard, phone, address } = requestBody
+        const { code, selectedSchool, studentId, education, grade, collage, userClass, name, idCard, phone, address } = requestBody
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         if (openid) {
             try {
-                    const sql2 = `UPDATE user_info SET school = ?,`+
-                    `id= ?,`+
-                    `education=?,`+
-                    `grade=?,`+
-                    `collage=?,`+
-                    `class=?,`+
-                    `user_name=?,`+
-                    `id_card=?,`+
-                    `phone=?,`+
-                    `user_address=?`+
+                const sql2 = `UPDATE user_info SET school = ?,` +
+                    `id= ?,` +
+                    `education=?,` +
+                    `grade=?,` +
+                    `collage=?,` +
+                    `class=?,` +
+                    `user_name=?,` +
+                    `id_card=?,` +
+                    `phone=?,` +
+                    `user_address=?` +
                     `WHERE open_id = ?;`
-                    const result2 = await transformPoolQuery(sql2, [selectedSchool,studentId,education,grade,collage,userClass,name,idCard,phone,address,openid])
-                    if(result2.affectedRows === 1){
-                        console.log('/register:用户注册信息插值成功！')
-                        ctx.response.status = statusCodeList.success
-                        ctx.response.body = {status:statusList.success}
-                    }else{
-                        console.log("/register:用户注册信息插值失败！")
-                        ctx.response.status = statusCodeList.fail
-                        ctx.response.body = statusList.fail
-                    }
+                const result2 = await transformPoolQuery(sql2, [selectedSchool, studentId, education, grade, collage, userClass, name, idCard, phone, address, openid])
+                if (result2.affectedRows === 1) {
+                    console.log('/register:用户注册信息插值成功！')
+                    ctx.response.status = statusCodeList.success
+                    ctx.response.body = { status: statusList.success }
+                } else {
+                    console.log("/register:用户注册信息插值失败！")
+                    ctx.response.status = statusCodeList.fail
+                    ctx.response.body = statusList.fail
+                }
             } catch (err) {
                 console.log('/register:数据库操作失败！', err)
                 ctx.response.status = statusCodeList.fail
@@ -130,6 +136,37 @@ const register = async (ctx: Koa.Context, next: () => Promise<any>) => {
         ctx.response.body = '/register:您请求的用户code有误!'
     }
 }
+
+const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
+    const requestBody = ctx.request.body
+    console.log(requestBody)
+    ctx.response.body = "success"
+}
+const releasegoodspics = async (ctx, next: () => Promise<any>) => {
+    const file = ctx.request.files.pic1
+    const upLoadCosResult=await upLoadCos(file)
+    if(upLoadCosResult.statusCode===200){  //如果状态码是200则说明图片上传cos成功
+        let downLoadCosResult=await downLoadCos(file.name)
+        fs.writeFile(path.resolve(__dirname,'../download/pic1.png'), downLoadCosResult,'utf-8' ,function(err){
+            if(err) throw err
+            console.log("hh")
+        })
+    }else{
+        console.log('/releasegoodspics:图片上传腾讯云对象存储失败！')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/releasegoodspics:图片上传腾讯云对象存储失败！'
+    }
+    // // 创建可读流 
+    // const reader = fs.createReadStream(file.path)
+    // let filePath = path.join(__dirname, '../upload') + `/${file.name}`
+    // // 创建可写流 
+    // const upStream = fs.createWriteStream(filePath);
+    // // 可读流通过管道写入可写流 
+    // reader.pipe(upStream);
+    // ctx.response.body = "上传成功";
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
+app.use(route.post('/releasegoods', releaseGoods))
+app.use(route.post('/releasegoodspics', releasegoodspics))
 app.listen(3000)

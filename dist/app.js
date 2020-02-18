@@ -10,7 +10,9 @@ var _koa = _interopRequireDefault(require("koa"));
 
 var _koaRoute = _interopRequireDefault(require("koa-route"));
 
-var _koaBodyparser = _interopRequireDefault(require("koa-bodyparser"));
+var _fs = _interopRequireDefault(require("fs"));
+
+var _path = _interopRequireDefault(require("path"));
 
 var _checkSignature = require("./utils/check-signature");
 
@@ -20,12 +22,21 @@ var _transformPoolQuery = _interopRequireDefault(require("./utils/transformPoolQ
 
 var _getOpenIdAndSessionKey = _interopRequireDefault(require("./utils/getOpenIdAndSessionKey"));
 
+var _uploadCos = _interopRequireDefault(require("./utils/upload-cos"));
+
+var _downloadCos = _interopRequireDefault(require("./utils/download-cos"));
+
 var _miniProgramInfo = require("./static-name/mini-program-info");
 
 var _userStatus = require("./static-name/user-status");
 
+// import bodyParse from 'koa-bodyparser'
+var body = require('koa-body');
+
 var app = new _koa["default"]();
-app.use((0, _koaBodyparser["default"])());
+app.use(body({
+  multipart: true
+})); // app.use(bodyParse())
 
 var login =
 /*#__PURE__*/
@@ -267,6 +278,91 @@ function () {
   };
 }();
 
+var releaseGoods =
+/*#__PURE__*/
+function () {
+  var _ref3 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee3(ctx, next) {
+    var requestBody;
+    return _regenerator["default"].wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            requestBody = ctx.request.body;
+            console.log(requestBody);
+            ctx.response.body = "success";
+
+          case 3:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee3);
+  }));
+
+  return function releaseGoods(_x5, _x6) {
+    return _ref3.apply(this, arguments);
+  };
+}();
+
+var releasegoodspics =
+/*#__PURE__*/
+function () {
+  var _ref4 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee4(ctx, next) {
+    var file, upLoadCosResult, downLoadCosResult;
+    return _regenerator["default"].wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            file = ctx.request.files.pic1;
+            _context4.next = 3;
+            return (0, _uploadCos["default"])(file);
+
+          case 3:
+            upLoadCosResult = _context4.sent;
+
+            if (!(upLoadCosResult.statusCode === 200)) {
+              _context4.next = 11;
+              break;
+            }
+
+            _context4.next = 7;
+            return (0, _downloadCos["default"])(file.name);
+
+          case 7:
+            downLoadCosResult = _context4.sent;
+
+            _fs["default"].writeFile(_path["default"].resolve(__dirname, '../download/pic1.png'), downLoadCosResult, 'utf-8', function (err) {
+              if (err) throw err;
+              console.log("hh");
+            });
+
+            _context4.next = 14;
+            break;
+
+          case 11:
+            console.log('/releasegoodspics:图片上传腾讯云对象存储失败！');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/releasegoodspics:图片上传腾讯云对象存储失败！';
+
+          case 14:
+          case "end":
+            return _context4.stop();
+        }
+      }
+    }, _callee4);
+  }));
+
+  return function releasegoodspics(_x7, _x8) {
+    return _ref4.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
+app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
+app.use(_koaRoute["default"].post('/releasegoodspics', releasegoodspics));
 app.listen(3000);
