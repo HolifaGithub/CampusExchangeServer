@@ -7,7 +7,7 @@ import {
     bucketDirName,
     region
 }from './cos-name'
-function upLoadCos(file){
+function upLoadCos(file,orderId){
     return new Promise<any>((resolve,reject)=>{
         let cos = new COS({
             SecretId: secretId,
@@ -16,7 +16,7 @@ function upLoadCos(file){
         cos.putObject({
             Bucket: bucket, /* 必须 */
             Region: region,    /* 必须 */
-            Key:`${bucketDirName}/${file.name}`,              /* 必须 */
+            Key:`${bucketDirName}/${orderId}/${file.name}`,              /* 必须 */
             StorageClass: 'STANDARD',
             Body: fs.createReadStream(file.path), // 上传文件对象
             // onProgress: function(progressData) {

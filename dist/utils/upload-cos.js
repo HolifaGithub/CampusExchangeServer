@@ -11,7 +11,7 @@ var COS = require('cos-nodejs-sdk-v5');
 
 var fs = require('fs');
 
-function upLoadCos(file) {
+function upLoadCos(file, orderId) {
   return new Promise(function (resolve, reject) {
     var cos = new COS({
       SecretId: _cosName.secretId,
@@ -24,7 +24,7 @@ function upLoadCos(file) {
       Region: _cosName.region,
 
       /* 必须 */
-      Key: "".concat(_cosName.bucketDirName, "/").concat(file.name),
+      Key: "".concat(_cosName.bucketDirName, "/").concat(orderId, "/").concat(file.name),
 
       /* 必须 */
       StorageClass: 'STANDARD',

@@ -139,13 +139,13 @@ const register = async (ctx: Koa.Context, next: () => Promise<any>) => {
 
 const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
     const requestBody = ctx.request.body
-    const { typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code } = requestBody
+    const { typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code,orderStatus } = requestBody
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         if (openid) {
-            const sql=`INSERT INTO goods(order_id,order_time,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-            const poolResult = await transformPoolQuery(sql, [orderId,openid,typeOne,typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation])
+            const sql=`INSERT INTO goods(order_id,order_time,order_status,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+            const poolResult = await transformPoolQuery(sql, [orderId,orderStatus,openid,typeOne,typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation])
             if (poolResult.affectedRows === 1) {
                 console.log('/releasegoods:用户发布商品成功！')
                 ctx.response.status = statusCodeList.success
@@ -167,8 +167,9 @@ const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
     }
 }
 const releasegoodspics = async (ctx, next: () => Promise<any>) => {
+    const {orderId}=ctx.request.body
     const file = ctx.request.files.pic
-    const upLoadCosResult = await upLoadCos(file)
+    const upLoadCosResult = await upLoadCos(file,orderId)
     if (upLoadCosResult.statusCode === 200) {  //如果状态码是200则说明图片上传cos成功
         const location = upLoadCosResult.Location
         console.log('/releasegoodspics:图片上传腾讯云对象存储成功！')

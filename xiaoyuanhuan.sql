@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS goods;
 CREATE TABLE goods(
     order_id VARCHAR(30) PRIMARY KEY,
     order_time  DATETIME,
+    order_status VARCHAR(20) NOT NULL,
     open_id VARCHAR(30) NOT NULL,
     type_one VARCHAR(20) NOT NULL,
     type_two VARCHAR(20) NOT NULL,
