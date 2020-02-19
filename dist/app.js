@@ -407,8 +407,110 @@ function () {
   };
 }();
 
+var getGoodsInfo =
+/*#__PURE__*/
+function () {
+  var _ref5 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee5(ctx, next) {
+    var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, _poolResult1$, nick_name, avatar_url, school, sql2, poolResult2, _poolResult2$, order_id, order_time, order_status, open_id, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location;
+
+    return _regenerator["default"].wrap(function _callee5$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            _ctx$request$query = ctx.request.query, code = _ctx$request$query.code, orderId = _ctx$request$query.orderId;
+
+            if (!code) {
+              _context5.next = 29;
+              break;
+            }
+
+            _context5.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context5.sent;
+            openid = result.openid;
+            _context5.prev = 6;
+            sql1 = "SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;";
+            _context5.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 10:
+            poolResult1 = _context5.sent;
+            _poolResult1$ = poolResult1[0], nick_name = _poolResult1$.nick_name, avatar_url = _poolResult1$.avatar_url, school = _poolResult1$.school;
+            sql2 = "SELECT * FROM goods WHERE order_id =?";
+            _context5.next = 15;
+            return (0, _transformPoolQuery["default"])(sql2, [orderId]);
+
+          case 15:
+            poolResult2 = _context5.sent;
+            _poolResult2$ = poolResult2[0], order_id = _poolResult2$.order_id, order_time = _poolResult2$.order_time, order_status = _poolResult2$.order_status, open_id = _poolResult2$.open_id, type_one = _poolResult2$.type_one, type_two = _poolResult2$.type_two, type_three = _poolResult2$.type_three, name_input = _poolResult2$.name_input, goods_number = _poolResult2$.goods_number, new_and_old_degree = _poolResult2$.new_and_old_degree, mode = _poolResult2$.mode, object_of_payment = _poolResult2$.object_of_payment, pay_for_me_price = _poolResult2$.pay_for_me_price, pay_for_other_price = _poolResult2$.pay_for_other_price, want_exchange_goods = _poolResult2$.want_exchange_goods, goods_describe = _poolResult2$.goods_describe, pics_location = _poolResult2$.pics_location;
+
+            if (poolResult1.length === 1 && poolResult2.length === 1) {
+              console.log('/getgoodsinfo:获取商品详情成功！');
+            }
+
+            ctx.response.body = {
+              status: _userStatus.statusList.success,
+              orderId: order_id,
+              orderTime: order_time,
+              orderStatus: order_status,
+              openid: open_id,
+              typeOne: type_one,
+              typeTwo: type_two,
+              typeThree: type_three,
+              nameInput: name_input,
+              goodsNumber: goods_number,
+              newAndOldDegree: new_and_old_degree,
+              mode: mode,
+              objectOfPayment: object_of_payment,
+              payForMePrice: pay_for_me_price,
+              payForOtherPrice: pay_for_other_price,
+              wantExchangeGoods: want_exchange_goods,
+              describe: goods_describe,
+              picsLocation: pics_location,
+              nickName: nick_name,
+              avatarUrl: avatar_url,
+              school: school
+            };
+            ctx.response.statusCode = _userStatus.statusCodeList.success;
+            _context5.next = 27;
+            break;
+
+          case 22:
+            _context5.prev = 22;
+            _context5.t0 = _context5["catch"](6);
+            console.log('/getgoodsinfo:数据库操作失败！', _context5.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getgoodsinfo:数据库操作失败！';
+
+          case 27:
+            _context5.next = 32;
+            break;
+
+          case 29:
+            console.log('/getgoodsinfo:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getgoodsinfo:您请求的用户code有误!';
+
+          case 32:
+          case "end":
+            return _context5.stop();
+        }
+      }
+    }, _callee5, null, [[6, 22]]);
+  }));
+
+  return function getGoodsInfo(_x9, _x10) {
+    return _ref5.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
 app.use(_koaRoute["default"].post('/releasegoodspics', releasegoodspics));
+app.use(_koaRoute["default"].get('/getgoodsinfo', getGoodsInfo));
 app.listen(3000);

@@ -192,8 +192,61 @@ const releasegoodspics = async (ctx, next: () => Promise<any>) => {
     // reader.pipe(upStream);
     // ctx.response.body = "上传成功";
 }
+
+const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
+    const {code,orderId}=ctx.request.query
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try{
+            const sql1=`SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
+        const poolResult1 = await transformPoolQuery(sql1, [openid])
+        const {nick_name,avatar_url,school}=poolResult1[0]
+        const sql2 =`SELECT * FROM goods WHERE order_id =?`
+        const poolResult2 = await transformPoolQuery(sql2, [orderId])
+        const {order_id,order_time,order_status,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location} = poolResult2[0]
+        if(poolResult1.length===1&&poolResult2.length===1){
+            console.log('/getgoodsinfo:获取商品详情成功！')
+        }
+        ctx.response.body={
+            status:statusList.success,
+            orderId:order_id,
+            orderTime:order_time,
+            orderStatus:order_status,
+            openid:open_id,
+            typeOne:type_one,
+            typeTwo:type_two,
+            typeThree:type_three,
+            nameInput:name_input,
+            goodsNumber:goods_number,
+            newAndOldDegree:new_and_old_degree, 
+            mode:mode, 
+            objectOfPayment:object_of_payment, 
+            payForMePrice:pay_for_me_price,
+            payForOtherPrice:pay_for_other_price,
+            wantExchangeGoods:want_exchange_goods, 
+            describe:goods_describe, 
+            picsLocation:pics_location,
+            nickName:nick_name,
+            avatarUrl:avatar_url,
+            school:school
+        }
+        ctx.response.statusCode=statusCodeList.success
+        }catch(err){
+            console.log('/getgoodsinfo:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getgoodsinfo:数据库操作失败！'
+        }
+        
+    }else {
+        console.log('/getgoodsinfo:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getgoodsinfo:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
 app.use(route.post('/releasegoodspics', releasegoodspics))
+app.use(route.get('/getgoodsinfo', getGoodsInfo))
 app.listen(3000)
