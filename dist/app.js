@@ -457,7 +457,6 @@ function () {
               orderId: order_id,
               orderTime: order_time,
               orderStatus: order_status,
-              openid: open_id,
               typeOne: type_one,
               typeTwo: type_two,
               typeThree: type_three,

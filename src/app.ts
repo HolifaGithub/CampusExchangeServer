@@ -204,7 +204,7 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
         const {nick_name,avatar_url,school}=poolResult1[0]
         const sql2 =`SELECT * FROM goods WHERE order_id =?`
         const poolResult2 = await transformPoolQuery(sql2, [orderId])
-        const {order_id,order_time,order_status,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location} = poolResult2[0]
+        const {order_id,order_time,order_status,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location} = poolResult2[0]
         if(poolResult1.length===1&&poolResult2.length===1){
             console.log('/getgoodsinfo:获取商品详情成功！')
         }
@@ -213,7 +213,6 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
             orderId:order_id,
             orderTime:order_time,
             orderStatus:order_status,
-            openid:open_id,
             typeOne:type_one,
             typeTwo:type_two,
             typeThree:type_three,
