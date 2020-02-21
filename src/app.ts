@@ -104,7 +104,7 @@ const register = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     `education=?,` +
                     `grade=?,` +
                     `collage=?,` +
-                    `class=?,` +
+                    `user_class=?,` +
                     `user_name=?,` +
                     `id_card=?,` +
                     `phone=?,` +
@@ -243,9 +243,54 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/getgoodsinfo:您请求的用户code有误!'
     }
 }
+
+const getUserInfo = async (ctx, next: () => Promise<any>) => {
+    const {code,orderId}=ctx.request.query
+    if(code&& !orderId){
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try{
+            const sql1=`SELECT * FROM user_info WHERE open_id = ? `
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if(poolResult1.length===1){
+                const {nick_name,gender,country,province,city,avatar_url,school,id,education,grade,collage,user_class,user_name,id_card,phone,user_address}=poolResult1[0]
+                console.log("/getuserinfo:获取用户信息成功！")
+                ctx.response.statusCode=statusCodeList.success
+                ctx.response.body={
+                    status:statusList.success,
+                    nickName:nick_name,
+                    gender:gender,
+                    country:country,
+                    province:province,
+                    city:city,
+                    avatarUrl:avatar_url,
+                    school:school,
+                    id:id,
+                    education:education,
+                    grade:grade,
+                    collage:collage,
+                    userClass:user_class,
+                    userName:user_name,
+                    idCard:id_card,
+                    phone:phone,
+                    userAddress:user_address
+                }
+            }
+        }catch(err){
+            console.log('/getuserinfo:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getuserinfo:数据库操作失败！'
+        }
+    }else{
+        console.log('/getuserinfo:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getuserinfo:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
 app.use(route.post('/releasegoodspics', releasegoodspics))
 app.use(route.get('/getgoodsinfo', getGoodsInfo))
+app.use(route.get('/getuserinfo',getUserInfo))
 app.listen(3000)

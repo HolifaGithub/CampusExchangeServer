@@ -212,7 +212,7 @@ function () {
             }
 
             _context2.prev = 8;
-            sql2 = "UPDATE user_info SET school = ?," + "id= ?," + "education=?," + "grade=?," + "collage=?," + "class=?," + "user_name=?," + "id_card=?," + "phone=?," + "user_address=?" + "WHERE open_id = ?;";
+            sql2 = "UPDATE user_info SET school = ?," + "id= ?," + "education=?," + "grade=?," + "collage=?," + "user_class=?," + "user_name=?," + "id_card=?," + "phone=?," + "user_address=?" + "WHERE open_id = ?;";
             _context2.next = 12;
             return (0, _transformPoolQuery["default"])(sql2, [selectedSchool, studentId, education, grade, collage, userClass, name, idCard, phone, address, openid]);
 
@@ -413,7 +413,7 @@ function () {
   var _ref5 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee5(ctx, next) {
-    var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, _poolResult1$, nick_name, avatar_url, school, sql2, poolResult2, _poolResult2$, order_id, order_time, order_status, open_id, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location;
+    var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, _poolResult1$, nick_name, avatar_url, school, sql2, poolResult2, _poolResult2$, order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location;
 
     return _regenerator["default"].wrap(function _callee5$(_context5) {
       while (1) {
@@ -446,7 +446,7 @@ function () {
 
           case 15:
             poolResult2 = _context5.sent;
-            _poolResult2$ = poolResult2[0], order_id = _poolResult2$.order_id, order_time = _poolResult2$.order_time, order_status = _poolResult2$.order_status, open_id = _poolResult2$.open_id, type_one = _poolResult2$.type_one, type_two = _poolResult2$.type_two, type_three = _poolResult2$.type_three, name_input = _poolResult2$.name_input, goods_number = _poolResult2$.goods_number, new_and_old_degree = _poolResult2$.new_and_old_degree, mode = _poolResult2$.mode, object_of_payment = _poolResult2$.object_of_payment, pay_for_me_price = _poolResult2$.pay_for_me_price, pay_for_other_price = _poolResult2$.pay_for_other_price, want_exchange_goods = _poolResult2$.want_exchange_goods, goods_describe = _poolResult2$.goods_describe, pics_location = _poolResult2$.pics_location;
+            _poolResult2$ = poolResult2[0], order_id = _poolResult2$.order_id, order_time = _poolResult2$.order_time, order_status = _poolResult2$.order_status, type_one = _poolResult2$.type_one, type_two = _poolResult2$.type_two, type_three = _poolResult2$.type_three, name_input = _poolResult2$.name_input, goods_number = _poolResult2$.goods_number, new_and_old_degree = _poolResult2$.new_and_old_degree, mode = _poolResult2$.mode, object_of_payment = _poolResult2$.object_of_payment, pay_for_me_price = _poolResult2$.pay_for_me_price, pay_for_other_price = _poolResult2$.pay_for_other_price, want_exchange_goods = _poolResult2$.want_exchange_goods, goods_describe = _poolResult2$.goods_describe, pics_location = _poolResult2$.pics_location;
 
             if (poolResult1.length === 1 && poolResult2.length === 1) {
               console.log('/getgoodsinfo:获取商品详情成功！');
@@ -507,9 +507,100 @@ function () {
   };
 }();
 
+var getUserInfo =
+/*#__PURE__*/
+function () {
+  var _ref6 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee6(ctx, next) {
+    var _ctx$request$query2, code, orderId, result, openid, sql1, poolResult1, _poolResult1$2, nick_name, gender, country, province, city, avatar_url, school, id, education, grade, collage, user_class, user_name, id_card, phone, user_address;
+
+    return _regenerator["default"].wrap(function _callee6$(_context6) {
+      while (1) {
+        switch (_context6.prev = _context6.next) {
+          case 0:
+            _ctx$request$query2 = ctx.request.query, code = _ctx$request$query2.code, orderId = _ctx$request$query2.orderId;
+
+            if (!(code && !orderId)) {
+              _context6.next = 21;
+              break;
+            }
+
+            _context6.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context6.sent;
+            openid = result.openid;
+            _context6.prev = 6;
+            sql1 = "SELECT * FROM user_info WHERE open_id = ? ";
+            _context6.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 10:
+            poolResult1 = _context6.sent;
+
+            if (poolResult1.length === 1) {
+              _poolResult1$2 = poolResult1[0], nick_name = _poolResult1$2.nick_name, gender = _poolResult1$2.gender, country = _poolResult1$2.country, province = _poolResult1$2.province, city = _poolResult1$2.city, avatar_url = _poolResult1$2.avatar_url, school = _poolResult1$2.school, id = _poolResult1$2.id, education = _poolResult1$2.education, grade = _poolResult1$2.grade, collage = _poolResult1$2.collage, user_class = _poolResult1$2.user_class, user_name = _poolResult1$2.user_name, id_card = _poolResult1$2.id_card, phone = _poolResult1$2.phone, user_address = _poolResult1$2.user_address;
+              console.log("/getuserinfo:获取用户信息成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                nickName: nick_name,
+                gender: gender,
+                country: country,
+                province: province,
+                city: city,
+                avatarUrl: avatar_url,
+                school: school,
+                id: id,
+                education: education,
+                grade: grade,
+                collage: collage,
+                userClass: user_class,
+                userName: user_name,
+                idCard: id_card,
+                phone: phone,
+                userAddress: user_address
+              };
+            }
+
+            _context6.next = 19;
+            break;
+
+          case 14:
+            _context6.prev = 14;
+            _context6.t0 = _context6["catch"](6);
+            console.log('/getuserinfo:数据库操作失败！', _context6.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getuserinfo:数据库操作失败！';
+
+          case 19:
+            _context6.next = 24;
+            break;
+
+          case 21:
+            console.log('/getuserinfo:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getuserinfo:您请求的用户code有误!';
+
+          case 24:
+          case "end":
+            return _context6.stop();
+        }
+      }
+    }, _callee6, null, [[6, 14]]);
+  }));
+
+  return function getUserInfo(_x11, _x12) {
+    return _ref6.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
 app.use(_koaRoute["default"].post('/releasegoodspics', releasegoodspics));
 app.use(_koaRoute["default"].get('/getgoodsinfo', getGoodsInfo));
+app.use(_koaRoute["default"].get('/getuserinfo', getUserInfo));
 app.listen(3000);
