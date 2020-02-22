@@ -628,10 +628,164 @@ function () {
   };
 }();
 
+var getMoney =
+/*#__PURE__*/
+function () {
+  var _ref7 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee7(ctx, next) {
+    var code, result, openid, sql1, poolResult1, balance;
+    return _regenerator["default"].wrap(function _callee7$(_context7) {
+      while (1) {
+        switch (_context7.prev = _context7.next) {
+          case 0:
+            code = ctx.request.query.code;
+
+            if (!code) {
+              _context7.next = 21;
+              break;
+            }
+
+            _context7.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context7.sent;
+            openid = result.openid;
+            _context7.prev = 6;
+            sql1 = "SELECT * FROM user_money WHERE open_id = ?";
+            _context7.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 10:
+            poolResult1 = _context7.sent;
+
+            if (poolResult1.length === 1) {
+              balance = poolResult1[0].balance;
+              console.log("/getmoney:获取用户余额成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                balance: balance
+              };
+            }
+
+            _context7.next = 19;
+            break;
+
+          case 14:
+            _context7.prev = 14;
+            _context7.t0 = _context7["catch"](6);
+            console.log('/getmoney:数据库操作失败！', _context7.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getmoney:数据库操作失败！';
+
+          case 19:
+            _context7.next = 24;
+            break;
+
+          case 21:
+            console.log('/getmoney:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getmoney:您请求的用户code有误!';
+
+          case 24:
+          case "end":
+            return _context7.stop();
+        }
+      }
+    }, _callee7, null, [[6, 14]]);
+  }));
+
+  return function getMoney(_x13, _x14) {
+    return _ref7.apply(this, arguments);
+  };
+}();
+
+var getOrderInfo =
+/*#__PURE__*/
+function () {
+  var _ref8 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee8(ctx, next) {
+    var code, result, openid, sql1, poolResult1, _poolResult1$3, released, trading, bougth, saled;
+
+    return _regenerator["default"].wrap(function _callee8$(_context8) {
+      while (1) {
+        switch (_context8.prev = _context8.next) {
+          case 0:
+            code = ctx.request.query.code;
+
+            if (!code) {
+              _context8.next = 21;
+              break;
+            }
+
+            _context8.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context8.sent;
+            openid = result.openid;
+            _context8.prev = 6;
+            sql1 = "SELECT * FROM user_order WHERE open_id = ?";
+            _context8.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 10:
+            poolResult1 = _context8.sent;
+
+            if (poolResult1.length === 1) {
+              _poolResult1$3 = poolResult1[0], released = _poolResult1$3.released, trading = _poolResult1$3.trading, bougth = _poolResult1$3.bougth, saled = _poolResult1$3.saled;
+              console.log("/getorderinfo:获取用户订单信息成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                released: released,
+                trading: trading,
+                bougth: bougth,
+                saled: saled
+              };
+            }
+
+            _context8.next = 19;
+            break;
+
+          case 14:
+            _context8.prev = 14;
+            _context8.t0 = _context8["catch"](6);
+            console.log('/getorderinfo:数据库操作失败！', _context8.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getmoney:数据库操作失败！';
+
+          case 19:
+            _context8.next = 24;
+            break;
+
+          case 21:
+            console.log('/getorderinfo:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getorderinfo:您请求的用户code有误!';
+
+          case 24:
+          case "end":
+            return _context8.stop();
+        }
+      }
+    }, _callee8, null, [[6, 14]]);
+  }));
+
+  return function getOrderInfo(_x15, _x16) {
+    return _ref8.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
 app.use(_koaRoute["default"].post('/releasegoodspics', releasegoodspics));
 app.use(_koaRoute["default"].get('/getgoodsinfo', getGoodsInfo));
 app.use(_koaRoute["default"].get('/getuserinfo', getUserInfo));
+app.use(_koaRoute["default"].get('/getmoney', getMoney));
+app.use(_koaRoute["default"].get('/getorderinfo', getOrderInfo));
 app.listen(3000);

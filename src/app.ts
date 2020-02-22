@@ -45,21 +45,21 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     } else {
                         isNewUser = false
                     }
-                    if(isNewUser){
-                        const sql2=`INSERT INTO user_money(open_id) VALUES (?)`
+                    if (isNewUser) {
+                        const sql2 = `INSERT INTO user_money(open_id) VALUES (?)`
                         const result2 = await transformPoolQuery(sql2, [openid])
                         if (result2.affectedRows === 1) {
-                            console.log(`/login:用户：${nickName}的openid数据已插入user_money！`) 
-                        }else{
-                            console.log(`/login:用户：${nickName}的openid数据插入user_money失败！`) 
+                            console.log(`/login:用户：${nickName}的openid数据已插入user_money！`)
+                        } else {
+                            console.log(`/login:用户：${nickName}的openid数据插入user_money失败！`)
                         }
 
-                        const sql3=`INSERT INTO user_order(open_id) VALUES (?)`
+                        const sql3 = `INSERT INTO user_order(open_id) VALUES (?)`
                         const result3 = await transformPoolQuery(sql3, [openid])
                         if (result3.affectedRows === 1) {
-                            console.log(`/login:用户：${nickName}的openid数据已插入user_order！`) 
-                        }else{
-                            console.log(`/login:用户：${nickName}的openid数据插入user_order失败！`) 
+                            console.log(`/login:用户：${nickName}的openid数据已插入user_order！`)
+                        } else {
+                            console.log(`/login:用户：${nickName}的openid数据插入user_order失败！`)
                         }
                     }
                     //2.如果不是新用户的话就将数据库的先前的用户数据清空
@@ -156,13 +156,13 @@ const register = async (ctx: Koa.Context, next: () => Promise<any>) => {
 
 const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
     const requestBody = ctx.request.body
-    const { typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code,orderStatus } = requestBody
+    const { typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code, orderStatus } = requestBody
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         if (openid) {
-            const sql=`INSERT INTO goods(order_id,order_time,order_status,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-            const poolResult = await transformPoolQuery(sql, [orderId,orderStatus,openid,typeOne,typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation])
+            const sql = `INSERT INTO goods(order_id,order_time,order_status,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+            const poolResult = await transformPoolQuery(sql, [orderId, orderStatus, openid, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation])
             if (poolResult.affectedRows === 1) {
                 console.log('/releasegoods:用户发布商品成功！')
                 ctx.response.status = statusCodeList.success
@@ -184,9 +184,9 @@ const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
     }
 }
 const releasegoodspics = async (ctx, next: () => Promise<any>) => {
-    const {orderId}=ctx.request.body
+    const { orderId } = ctx.request.body
     const file = ctx.request.files.pic
-    const upLoadCosResult = await upLoadCos(file,orderId)
+    const upLoadCosResult = await upLoadCos(file, orderId)
     if (upLoadCosResult.statusCode === 200) {  //如果状态码是200则说明图片上传cos成功
         const location = upLoadCosResult.Location
         console.log('/releasegoodspics:图片上传腾讯云对象存储成功！')
@@ -211,50 +211,50 @@ const releasegoodspics = async (ctx, next: () => Promise<any>) => {
 }
 
 const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
-    const {code,orderId}=ctx.request.query
+    const { code, orderId } = ctx.request.query
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
-        try{
-            const sql1=`SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
-        const poolResult1 = await transformPoolQuery(sql1, [openid])
-        const {nick_name,avatar_url,school}=poolResult1[0]
-        const sql2 =`SELECT * FROM goods WHERE order_id =?`
-        const poolResult2 = await transformPoolQuery(sql2, [orderId])
-        const {order_id,order_time,order_status,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location} = poolResult2[0]
-        if(poolResult1.length===1&&poolResult2.length===1){
-            console.log('/getgoodsinfo:获取商品详情成功！')
-        }
-        ctx.response.body={
-            status:statusList.success,
-            orderId:order_id,
-            orderTime:order_time,
-            orderStatus:order_status,
-            typeOne:type_one,
-            typeTwo:type_two,
-            typeThree:type_three,
-            nameInput:name_input,
-            goodsNumber:goods_number,
-            newAndOldDegree:new_and_old_degree, 
-            mode:mode, 
-            objectOfPayment:object_of_payment, 
-            payForMePrice:pay_for_me_price,
-            payForOtherPrice:pay_for_other_price,
-            wantExchangeGoods:want_exchange_goods, 
-            describe:goods_describe, 
-            picsLocation:pics_location,
-            nickName:nick_name,
-            avatarUrl:avatar_url,
-            school:school
-        }
-        ctx.response.statusCode=statusCodeList.success
-        }catch(err){
+        try {
+            const sql1 = `SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            const { nick_name, avatar_url, school } = poolResult1[0]
+            const sql2 = `SELECT * FROM goods WHERE order_id =?`
+            const poolResult2 = await transformPoolQuery(sql2, [orderId])
+            const { order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location } = poolResult2[0]
+            if (poolResult1.length === 1 && poolResult2.length === 1) {
+                console.log('/getgoodsinfo:获取商品详情成功！')
+            }
+            ctx.response.body = {
+                status: statusList.success,
+                orderId: order_id,
+                orderTime: order_time,
+                orderStatus: order_status,
+                typeOne: type_one,
+                typeTwo: type_two,
+                typeThree: type_three,
+                nameInput: name_input,
+                goodsNumber: goods_number,
+                newAndOldDegree: new_and_old_degree,
+                mode: mode,
+                objectOfPayment: object_of_payment,
+                payForMePrice: pay_for_me_price,
+                payForOtherPrice: pay_for_other_price,
+                wantExchangeGoods: want_exchange_goods,
+                describe: goods_describe,
+                picsLocation: pics_location,
+                nickName: nick_name,
+                avatarUrl: avatar_url,
+                school: school
+            }
+            ctx.response.statusCode = statusCodeList.success
+        } catch (err) {
             console.log('/getgoodsinfo:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/getgoodsinfo:数据库操作失败！'
         }
-        
-    }else {
+
+    } else {
         console.log('/getgoodsinfo:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/getgoodsinfo:您请求的用户code有误!'
@@ -262,46 +262,107 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
 }
 
 const getUserInfo = async (ctx, next: () => Promise<any>) => {
-    const {code,orderId}=ctx.request.query
-    if(code&& !orderId){
+    const { code, orderId } = ctx.request.query
+    if (code && !orderId) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
-        try{
-            const sql1=`SELECT * FROM user_info WHERE open_id = ? `
+        try {
+            const sql1 = `SELECT * FROM user_info WHERE open_id = ? `
             const poolResult1 = await transformPoolQuery(sql1, [openid])
-            if(poolResult1.length===1){
-                const {nick_name,gender,country,province,city,avatar_url,school,id,education,grade,collage,user_class,user_name,id_card,phone,user_address}=poolResult1[0]
+            if (poolResult1.length === 1) {
+                const { nick_name, gender, country, province, city, avatar_url, school, id, education, grade, collage, user_class, user_name, id_card, phone, user_address } = poolResult1[0]
                 console.log("/getuserinfo:获取用户信息成功！")
-                ctx.response.statusCode=statusCodeList.success
-                ctx.response.body={
-                    status:statusList.success,
-                    nickName:nick_name,
-                    gender:gender,
-                    country:country,
-                    province:province,
-                    city:city,
-                    avatarUrl:avatar_url,
-                    school:school,
-                    id:id,
-                    education:education,
-                    grade:grade,
-                    collage:collage,
-                    userClass:user_class,
-                    userName:user_name,
-                    idCard:id_card,
-                    phone:phone,
-                    userAddress:user_address
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success,
+                    nickName: nick_name,
+                    gender: gender,
+                    country: country,
+                    province: province,
+                    city: city,
+                    avatarUrl: avatar_url,
+                    school: school,
+                    id: id,
+                    education: education,
+                    grade: grade,
+                    collage: collage,
+                    userClass: user_class,
+                    userName: user_name,
+                    idCard: id_card,
+                    phone: phone,
+                    userAddress: user_address
                 }
             }
-        }catch(err){
+        } catch (err) {
             console.log('/getuserinfo:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/getuserinfo:数据库操作失败！'
         }
-    }else{
+    } else {
         console.log('/getuserinfo:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/getuserinfo:您请求的用户code有误!'
+    }
+}
+
+const getMoney = async (ctx, next: () => Promise<any>) => {
+    const { code } = ctx.request.query
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT * FROM user_money WHERE open_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length === 1) {
+                const { balance } = poolResult1[0]
+                console.log("/getmoney:获取用户余额成功！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success,
+                    balance: balance
+                }
+            }
+        } catch (err) {
+            console.log('/getmoney:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getmoney:数据库操作失败！'
+        }
+    } else {
+        console.log('/getmoney:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getmoney:您请求的用户code有误!'
+    }
+}
+
+const getOrderInfo = async (ctx, next: () => Promise<any>) => {
+    const { code } = ctx.request.query
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT * FROM user_order WHERE open_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length === 1) {
+                const { released, trading, bougth, saled } = poolResult1[0]
+                console.log("/getorderinfo:获取用户订单信息成功！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success,
+                    released,
+                    trading,
+                    bougth,
+                    saled
+                }
+            }
+        } catch (err) {
+            console.log('/getorderinfo:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getmoney:数据库操作失败！'
+        }
+    } else {
+        console.log('/getorderinfo:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getorderinfo:您请求的用户code有误!'
     }
 }
 app.use(route.post('/login', login))
@@ -309,5 +370,7 @@ app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
 app.use(route.post('/releasegoodspics', releasegoodspics))
 app.use(route.get('/getgoodsinfo', getGoodsInfo))
-app.use(route.get('/getuserinfo',getUserInfo))
+app.use(route.get('/getuserinfo', getUserInfo))
+app.use(route.get('/getmoney', getMoney))
+app.use(route.get('/getorderinfo', getOrderInfo))
 app.listen(3000)
