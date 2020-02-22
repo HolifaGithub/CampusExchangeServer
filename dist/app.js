@@ -38,7 +38,7 @@ function () {
   var _ref = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee(ctx, next) {
-    var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, checkSignatureResult, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3;
+    var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, checkSignatureResult, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3, sql4, result4, sql5, result5;
     return _regenerator["default"].wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -48,7 +48,7 @@ function () {
             requestBody = ctx.request.body;
 
             if (!requestBody.code) {
-              _context.next = 47;
+              _context.next = 58;
               break;
             }
 
@@ -61,7 +61,7 @@ function () {
             openid = result.openid, session_key = result.session_key;
 
             if (!(openid && session_key)) {
-              _context.next = 45;
+              _context.next = 56;
               break;
             }
 
@@ -69,7 +69,7 @@ function () {
             checkSignatureResult = (0, _checkSignature.checkSignature)(signature, rawData, session_key);
 
             if (!checkSignatureResult) {
-              _context.next = 42;
+              _context.next = 53;
               break;
             }
 
@@ -91,15 +91,14 @@ function () {
               isNewUser = true;
             } else {
               isNewUser = false;
-            } //2.如果不是新用户的话就将数据库的先前的用户数据
+            }
 
-
-            if (isNewUser) {
-              _context.next = 27;
+            if (!isNewUser) {
+              _context.next = 32;
               break;
             }
 
-            sql2 = "DELETE FROM user_info WHERE open_id = ?;";
+            sql2 = "INSERT INTO user_money(open_id) VALUES (?)";
             _context.next = 25;
             return (0, _transformPoolQuery["default"])(sql2, [openid]);
 
@@ -107,25 +106,57 @@ function () {
             result2 = _context.sent;
 
             if (result2.affectedRows === 1) {
+              console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684openid\u6570\u636E\u5DF2\u63D2\u5165user_money\uFF01"));
+            } else {
+              console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684openid\u6570\u636E\u63D2\u5165user_money\u5931\u8D25\uFF01"));
+            }
+
+            sql3 = "INSERT INTO user_order(open_id) VALUES (?)";
+            _context.next = 30;
+            return (0, _transformPoolQuery["default"])(sql3, [openid]);
+
+          case 30:
+            result3 = _context.sent;
+
+            if (result3.affectedRows === 1) {
+              console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684openid\u6570\u636E\u5DF2\u63D2\u5165user_order\uFF01"));
+            } else {
+              console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684openid\u6570\u636E\u63D2\u5165user_order\u5931\u8D25\uFF01"));
+            }
+
+          case 32:
+            if (isNewUser) {
+              _context.next = 38;
+              break;
+            }
+
+            sql4 = "DELETE FROM user_info WHERE open_id = ?;";
+            _context.next = 36;
+            return (0, _transformPoolQuery["default"])(sql4, [openid]);
+
+          case 36:
+            result4 = _context.sent;
+
+            if (result4.affectedRows === 1) {
               isDeleteSuccess = true;
             } else {
               isDeleteSuccess = false;
             }
 
-          case 27:
+          case 38:
             if (!(!isNewUser && isDeleteSuccess || isNewUser)) {
-              _context.next = 33;
+              _context.next = 44;
               break;
             }
 
-            sql3 = "INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);";
-            _context.next = 31;
-            return (0, _transformPoolQuery["default"])(sql3, [openid, nickName, gender, country, province, city, avatarUrl]);
+            sql5 = "INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);";
+            _context.next = 42;
+            return (0, _transformPoolQuery["default"])(sql5, [openid, nickName, gender, country, province, city, avatarUrl]);
 
-          case 31:
-            result3 = _context.sent;
+          case 42:
+            result5 = _context.sent;
 
-            if (result3.affectedRows === 1) {
+            if (result5.affectedRows === 1) {
               console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684\u767B\u5F55\u5F00\u653E\u6570\u636E\u5DF2\u4FDD\u5B58\u5230\u6570\u636E\u5E93\uFF01"));
               ctx.response.status = _userStatus.statusCodeList.success;
               ctx.response.body = {
@@ -138,41 +169,41 @@ function () {
               ctx.response.body = '数据库操作失败！';
             }
 
-          case 33:
-            _context.next = 40;
+          case 44:
+            _context.next = 51;
             break;
 
-          case 35:
-            _context.prev = 35;
+          case 46:
+            _context.prev = 46;
             _context.t0 = _context["catch"](15);
             console.log('/login:数据库操作失败！', _context.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:数据库操作失败！';
 
-          case 40:
-            _context.next = 45;
+          case 51:
+            _context.next = 56;
             break;
 
-          case 42:
+          case 53:
             console.log('/login:您的签名signature有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:您的签名signature有误!';
 
-          case 45:
-            _context.next = 50;
+          case 56:
+            _context.next = 61;
             break;
 
-          case 47:
+          case 58:
             console.log('/login:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:您请求的用户code有误!';
 
-          case 50:
+          case 61:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, null, [[15, 35]]);
+    }, _callee, null, [[15, 46]]);
   }));
 
   return function login(_x, _x2) {

@@ -44,3 +44,22 @@ CREATE TABLE goods(
     goods_describe VARCHAR(200) NOT NULL,
     pics_location VARCHAR(2000) NOT NULL
 );
+
+DROP TABLE IF EXISTS user_money;
+CREATE TABLE user_money(
+     open_id VARCHAR(30) PRIMARY KEY,
+     balance FLOAT(100,1)  DEFAULT 88.8,
+     income FLOAT(100,1) DEFAULT 0,
+     pay FLOAT(100,1) DEFAULT 0
+);
+
+DROP TABLE IF EXISTS user_order;
+CREATE TABLE user_order(
+     open_id VARCHAR(30) PRIMARY KEY,
+     released Int(20) DEFAULT 0,
+     trading Int(20) DEFAULT 0,
+     bougth Int(20) DEFAULT 0,
+     saled Int(20) DEFAULT 0
+);
+
+

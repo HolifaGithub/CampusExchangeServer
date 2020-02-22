@@ -45,20 +45,37 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     } else {
                         isNewUser = false
                     }
-                    //2.如果不是新用户的话就将数据库的先前的用户数据
-                    if (!isNewUser) {
-                        const sql2 = `DELETE FROM user_info WHERE open_id = ?;`
+                    if(isNewUser){
+                        const sql2=`INSERT INTO user_money(open_id) VALUES (?)`
                         const result2 = await transformPoolQuery(sql2, [openid])
                         if (result2.affectedRows === 1) {
+                            console.log(`/login:用户：${nickName}的openid数据已插入user_money！`) 
+                        }else{
+                            console.log(`/login:用户：${nickName}的openid数据插入user_money失败！`) 
+                        }
+
+                        const sql3=`INSERT INTO user_order(open_id) VALUES (?)`
+                        const result3 = await transformPoolQuery(sql3, [openid])
+                        if (result3.affectedRows === 1) {
+                            console.log(`/login:用户：${nickName}的openid数据已插入user_order！`) 
+                        }else{
+                            console.log(`/login:用户：${nickName}的openid数据插入user_order失败！`) 
+                        }
+                    }
+                    //2.如果不是新用户的话就将数据库的先前的用户数据清空
+                    if (!isNewUser) {
+                        const sql4 = `DELETE FROM user_info WHERE open_id = ?;`
+                        const result4 = await transformPoolQuery(sql4, [openid])
+                        if (result4.affectedRows === 1) {
                             isDeleteSuccess = true
                         } else {
                             isDeleteSuccess = false
                         }
                     }
                     if (!isNewUser && isDeleteSuccess || isNewUser) {
-                        const sql3 = `INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);`
-                        const result3 = await transformPoolQuery(sql3, [openid, nickName, gender, country, province, city, avatarUrl])
-                        if (result3.affectedRows === 1) {
+                        const sql5 = `INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);`
+                        const result5 = await transformPoolQuery(sql5, [openid, nickName, gender, country, province, city, avatarUrl])
+                        if (result5.affectedRows === 1) {
                             console.log(`/login:用户：${nickName}的登录开放数据已保存到数据库！`)
                             ctx.response.status = statusCodeList.success
                             ctx.response.body = {
