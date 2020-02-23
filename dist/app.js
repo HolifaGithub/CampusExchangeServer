@@ -309,7 +309,7 @@ function () {
   var _ref3 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee3(ctx, next) {
-    var requestBody, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code, orderStatus, result, openid, sql, poolResult;
+    var requestBody, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code, orderStatus, result, openid, sql, poolResult, sql2, poolResult2;
     return _regenerator["default"].wrap(function _callee3$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
@@ -318,7 +318,7 @@ function () {
             typeOne = requestBody.typeOne, typeTwo = requestBody.typeTwo, typeThree = requestBody.typeThree, nameInput = requestBody.nameInput, goodsNumber = requestBody.goodsNumber, newAndOldDegree = requestBody.newAndOldDegree, mode = requestBody.mode, objectOfPayment = requestBody.objectOfPayment, payForMePrice = requestBody.payForMePrice, payForOtherPrice = requestBody.payForOtherPrice, wantExchangeGoods = requestBody.wantExchangeGoods, describe = requestBody.describe, picsLocation = requestBody.picsLocation, orderId = requestBody.orderId, code = requestBody.code, orderStatus = requestBody.orderStatus;
 
             if (!code) {
-              _context3.next = 20;
+              _context3.next = 30;
               break;
             }
 
@@ -330,7 +330,7 @@ function () {
             openid = result.openid;
 
             if (!openid) {
-              _context3.next = 15;
+              _context3.next = 25;
               break;
             }
 
@@ -341,6 +341,18 @@ function () {
           case 11:
             poolResult = _context3.sent;
 
+            if (!(poolResult.affectedRows === 1)) {
+              _context3.next = 20;
+              break;
+            }
+
+            sql2 = "update user_order set released = released + 1  where open_id =? ";
+            _context3.next = 16;
+            return (0, _transformPoolQuery["default"])(sql2, [openid]);
+
+          case 16:
+            poolResult2 = _context3.sent;
+
             if (poolResult.affectedRows === 1) {
               console.log('/releasegoods:用户发布商品成功！');
               ctx.response.status = _userStatus.statusCodeList.success;
@@ -348,29 +360,38 @@ function () {
                 status: _userStatus.statusList.success
               };
             } else {
-              console.log("/releasegoods:用户发布商品失败！");
+              console.log("/releasegoods:用户订单表发布订单数+1失败！");
               ctx.response.status = _userStatus.statusCodeList.fail;
               ctx.response.body = _userStatus.statusList.fail;
             }
 
-            _context3.next = 18;
-            break;
-
-          case 15:
-            console.log('/releasegoods:获取openid失败！');
-            ctx.response.status = _userStatus.statusCodeList.fail;
-            ctx.response.body = '/releasegoods:获取openid失败！';
-
-          case 18:
             _context3.next = 23;
             break;
 
           case 20:
+            console.log("/releasegoods:用户发布商品失败！");
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = _userStatus.statusList.fail;
+
+          case 23:
+            _context3.next = 28;
+            break;
+
+          case 25:
+            console.log('/releasegoods:获取openid失败！');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/releasegoods:获取openid失败！';
+
+          case 28:
+            _context3.next = 33;
+            break;
+
+          case 30:
             console.log('/releasegoods:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/releasegoods:您请求的用户code有误!';
 
-          case 23:
+          case 33:
           case "end":
             return _context3.stop();
         }

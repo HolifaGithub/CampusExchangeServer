@@ -164,9 +164,17 @@ const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
             const sql = `INSERT INTO goods(order_id,order_time,order_status,open_id,type_one,type_two,type_three,name_input,goods_number,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,goods_describe,pics_location) VALUES (?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
             const poolResult = await transformPoolQuery(sql, [orderId, orderStatus, openid, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation])
             if (poolResult.affectedRows === 1) {
-                console.log('/releasegoods:用户发布商品成功！')
-                ctx.response.status = statusCodeList.success
-                ctx.response.body = { status: statusList.success }
+                const sql2 = `update user_order set released = released + 1  where open_id =? `
+                const poolResult2 = await transformPoolQuery(sql2, [openid])
+                if (poolResult.affectedRows === 1) {
+                    console.log('/releasegoods:用户发布商品成功！')
+                    ctx.response.status = statusCodeList.success
+                    ctx.response.body = { status: statusList.success }
+                } else {
+                    console.log("/releasegoods:用户订单表发布订单数+1失败！")
+                    ctx.response.status = statusCodeList.fail
+                    ctx.response.body = statusList.fail
+                }
             } else {
                 console.log("/releasegoods:用户发布商品失败！")
                 ctx.response.status = statusCodeList.fail
