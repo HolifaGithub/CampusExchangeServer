@@ -10,9 +10,9 @@ import { WXBizDataCrypt } from './utils/WXBizDataCrypt'
 import transformPoolQuery from './utils/transformPoolQuery'
 import getOpenIdAndSessionKey from './utils/getOpenIdAndSessionKey'
 import upLoadCos from './utils/upload-cos'
-import downLoadCos from './utils/download-cos'
 import { appId, appSecret } from './static-name/mini-program-info'
 import { statusCodeList, statusList } from './static-name/user-status'
+import { resolve } from 'dns'
 
 
 const app = new Koa()
@@ -166,7 +166,7 @@ const releaseGoods = async (ctx: Koa.Context, next: () => Promise<any>) => {
             if (poolResult.affectedRows === 1) {
                 const sql2 = `update user_order set released = released + 1  where open_id =? `
                 const poolResult2 = await transformPoolQuery(sql2, [openid])
-                if (poolResult.affectedRows === 1) {
+                if (poolResult2.affectedRows === 1) {
                     console.log('/releasegoods:用户发布商品成功！')
                     ctx.response.status = statusCodeList.success
                     ctx.response.body = { status: statusList.success }
@@ -373,6 +373,92 @@ const getOrderInfo = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/getorderinfo:您请求的用户code有误!'
     }
 }
+
+interface ReturnDataObject {
+    orderId: string;
+    nameInput: string;
+    newAndOldDegree: string;
+    mode: string;
+    objectOfPayment: string;
+    payForMePrice: number;
+    payForOtherPrice: number;
+    wantExchangeGoods: string;
+    topPicSrc: string;
+    watchedPeople: number;
+    nickName: string;
+    avatarUrl: string;
+}
+const getWaterFall = async (ctx, next: () => Promise<any>) => {
+    const { code } = ctx.request.query
+    const returnDatas: ReturnDataObject[] = []
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT 8;`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length > 0) {
+                if (poolResult1.length % 2 !== 0) {
+                    poolResult1.pop()
+                }
+                await new Promise((resolve, reject) => {
+                    poolResult1.map(async (data) => {
+                        const sql2 = `SELECT nick_name,avatar_url from user_info WHERE open_id =?`
+                        const poolResult2 = await transformPoolQuery(sql2, [data.open_id])
+                        if (poolResult2.length === 1) {
+                            let topPicSrc
+                            const len = data.pics_location.length
+                            if (len === 0) {
+                                topPicSrc = ''
+                            } else {
+                                topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                            }
+                            returnDatas.push({
+                                orderId: data.order_id,
+                                nameInput: data.name_input,
+                                newAndOldDegree: data.new_and_old_degree,
+                                mode: data.mode,
+                                objectOfPayment: data.object_of_payment,
+                                payForMePrice: data.pay_for_me_price,
+                                payForOtherPrice: data.pay_for_other_price,
+                                wantExchangeGoods: data.want_exchange_goods,
+                                topPicSrc: topPicSrc,
+                                watchedPeople: data.watched_people,
+                                nickName: poolResult2[0].nick_name,
+                                avatarUrl: poolResult2[0].avatar_url
+                            })
+                        }
+                        if (returnDatas.length === poolResult1.length) {
+                            resolve()
+                        }
+                    })
+                }).then(() => {
+                    console.log("/getwaterfall:获取waterfall成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                        returnDatas: returnDatas
+                    }
+                })
+            } else {
+                console.log("/getwaterfall:获取waterfall成功，但无数据！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success,
+                    returnDatas: returnDatas
+                }
+            }
+        } catch (err) {
+            console.log('/getwaterfall:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getwaterfall:数据库操作失败！'
+        }
+    } else {
+        console.log('/getwaterfall:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getwaterfall:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -381,4 +467,5 @@ app.use(route.get('/getgoodsinfo', getGoodsInfo))
 app.use(route.get('/getuserinfo', getUserInfo))
 app.use(route.get('/getmoney', getMoney))
 app.use(route.get('/getorderinfo', getOrderInfo))
+app.use(route.get('/getwaterfall', getWaterFall))
 app.listen(3000)

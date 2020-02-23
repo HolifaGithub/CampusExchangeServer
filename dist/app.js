@@ -353,7 +353,7 @@ function () {
           case 16:
             poolResult2 = _context3.sent;
 
-            if (poolResult.affectedRows === 1) {
+            if (poolResult2.affectedRows === 1) {
               console.log('/releasegoods:用户发布商品成功！');
               ctx.response.status = _userStatus.statusCodeList.success;
               ctx.response.body = {
@@ -801,6 +801,164 @@ function () {
   };
 }();
 
+var getWaterFall =
+/*#__PURE__*/
+function () {
+  var _ref9 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee10(ctx, next) {
+    var code, returnDatas, result, openid, sql1, poolResult1;
+    return _regenerator["default"].wrap(function _callee10$(_context10) {
+      while (1) {
+        switch (_context10.prev = _context10.next) {
+          case 0:
+            code = ctx.request.query.code;
+            returnDatas = [];
+
+            if (!code) {
+              _context10.next = 30;
+              break;
+            }
+
+            _context10.next = 5;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 5:
+            result = _context10.sent;
+            openid = result.openid;
+            _context10.prev = 7;
+            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT 8;";
+            _context10.next = 11;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 11:
+            poolResult1 = _context10.sent;
+
+            if (!(poolResult1.length > 0)) {
+              _context10.next = 18;
+              break;
+            }
+
+            if (poolResult1.length % 2 !== 0) {
+              poolResult1.pop();
+            }
+
+            _context10.next = 16;
+            return new Promise(function (resolve, reject) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref10 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee9(data) {
+                  var sql2, poolResult2, topPicSrc, len;
+                  return _regenerator["default"].wrap(function _callee9$(_context9) {
+                    while (1) {
+                      switch (_context9.prev = _context9.next) {
+                        case 0:
+                          sql2 = "SELECT nick_name,avatar_url from user_info WHERE open_id =?";
+                          _context9.next = 3;
+                          return (0, _transformPoolQuery["default"])(sql2, [data.open_id]);
+
+                        case 3:
+                          poolResult2 = _context9.sent;
+
+                          if (poolResult2.length === 1) {
+                            len = data.pics_location.length;
+
+                            if (len === 0) {
+                              topPicSrc = '';
+                            } else {
+                              topPicSrc = 'https://' + data.pics_location.split(';')[0];
+                            }
+
+                            console.log("object", data.nameInput);
+                            returnDatas.push({
+                              orderId: data.order_id,
+                              nameInput: data.name_input,
+                              newAndOldDegree: data.new_and_old_degree,
+                              mode: data.mode,
+                              objectOfPayment: data.object_of_payment,
+                              payForMePrice: data.pay_for_me_price,
+                              payForOtherPrice: data.pay_for_other_price,
+                              wantExchangeGoods: data.want_exchange_goods,
+                              topPicSrc: topPicSrc,
+                              watchedPeople: data.watched_people,
+                              nickName: poolResult2[0].nick_name,
+                              avatarUrl: poolResult2[0].avatar_url
+                            });
+                          }
+
+                          if (returnDatas.length === poolResult1.length) {
+                            resolve();
+                          }
+
+                        case 6:
+                        case "end":
+                          return _context9.stop();
+                      }
+                    }
+                  }, _callee9);
+                }));
+
+                return function (_x19) {
+                  return _ref10.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/getwaterfall:获取waterfall成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            });
+
+          case 16:
+            _context10.next = 21;
+            break;
+
+          case 18:
+            console.log("/getwaterfall:获取waterfall成功，但无数据！");
+            ctx.response.statusCode = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: _userStatus.statusList.success,
+              returnDatas: returnDatas
+            };
+
+          case 21:
+            _context10.next = 28;
+            break;
+
+          case 23:
+            _context10.prev = 23;
+            _context10.t0 = _context10["catch"](7);
+            console.log('/getwaterfall:数据库操作失败！', _context10.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getwaterfall:数据库操作失败！';
+
+          case 28:
+            _context10.next = 33;
+            break;
+
+          case 30:
+            console.log('/getwaterfall:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getwaterfall:您请求的用户code有误!';
+
+          case 33:
+          case "end":
+            return _context10.stop();
+        }
+      }
+    }, _callee10, null, [[7, 23]]);
+  }));
+
+  return function getWaterFall(_x17, _x18) {
+    return _ref9.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -809,4 +967,5 @@ app.use(_koaRoute["default"].get('/getgoodsinfo', getGoodsInfo));
 app.use(_koaRoute["default"].get('/getuserinfo', getUserInfo));
 app.use(_koaRoute["default"].get('/getmoney', getMoney));
 app.use(_koaRoute["default"].get('/getorderinfo', getOrderInfo));
+app.use(_koaRoute["default"].get('/getwaterfall', getWaterFall));
 app.listen(3000);

@@ -42,7 +42,8 @@ CREATE TABLE goods(
     pay_for_other_price FLOAT(100,1) NOT NULL,
     want_exchange_goods VARCHAR(30) NOT NULL,
     goods_describe VARCHAR(200) NOT NULL,
-    pics_location VARCHAR(2000) NOT NULL
+    pics_location VARCHAR(2000) NOT NULL,
+    watched_people Int(50)  DEFAULT 0
 );
 
 DROP TABLE IF EXISTS user_money;
