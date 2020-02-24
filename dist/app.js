@@ -10,6 +10,10 @@ var _koa = _interopRequireDefault(require("koa"));
 
 var _koaRoute = _interopRequireDefault(require("koa-route"));
 
+var _fs = _interopRequireDefault(require("fs"));
+
+var _path = _interopRequireDefault(require("path"));
+
 var _checkSignature = require("./utils/check-signature");
 
 var _WXBizDataCrypt = require("./utils/WXBizDataCrypt");
@@ -24,10 +28,25 @@ var _miniProgramInfo = require("./static-name/mini-program-info");
 
 var _userStatus = require("./static-name/user-status");
 
+var _http = _interopRequireDefault(require("http"));
+
 // import bodyParse from 'koa-bodyparser'
 var body = require('koa-body');
 
 var app = new _koa["default"]();
+
+var keyContent = _fs["default"].readFileSync(_path["default"].join(__dirname, '../https/2.key'));
+
+var certContent = _fs["default"].readFileSync(_path["default"].join(__dirname, '../https/1.crt'));
+
+var httpsOption = {
+  key: keyContent,
+  cert: certContent
+};
+
+_http["default"].createServer(app.callback()).listen(3000); // https.createServer(httpsOption, app.callback()).listen(3000)
+
+
 app.use(body({
   multipart: true
 })); // app.use(bodyParse())
@@ -807,35 +826,38 @@ function () {
   var _ref9 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee10(ctx, next) {
-    var code, returnDatas, result, openid, sql1, poolResult1;
+    var _ctx$request$query3, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
+
     return _regenerator["default"].wrap(function _callee10$(_context10) {
       while (1) {
         switch (_context10.prev = _context10.next) {
           case 0:
-            code = ctx.request.query.code;
+            _ctx$request$query3 = ctx.request.query, code = _ctx$request$query3.code, page = _ctx$request$query3.page;
+            startIndex = (page - 1) * 2;
             returnDatas = [];
 
             if (!code) {
-              _context10.next = 30;
+              _context10.next = 32;
               break;
             }
 
-            _context10.next = 5;
+            _context10.next = 6;
             return (0, _getOpenIdAndSessionKey["default"])(code);
 
-          case 5:
+          case 6:
             result = _context10.sent;
             openid = result.openid;
-            _context10.prev = 7;
-            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT 8;";
-            _context10.next = 11;
-            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+            _context10.prev = 8;
+            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,2;";
+            _context10.next = 12;
+            return (0, _transformPoolQuery["default"])(sql1, [openid, startIndex]);
 
-          case 11:
+          case 12:
             poolResult1 = _context10.sent;
+            console.log(poolResult1);
 
             if (!(poolResult1.length > 0)) {
-              _context10.next = 18;
+              _context10.next = 20;
               break;
             }
 
@@ -843,7 +865,7 @@ function () {
               poolResult1.pop();
             }
 
-            _context10.next = 16;
+            _context10.next = 18;
             return new Promise(function (resolve, reject) {
               poolResult1.map(
               /*#__PURE__*/
@@ -872,7 +894,6 @@ function () {
                               topPicSrc = 'https://' + data.pics_location.split(';')[0];
                             }
 
-                            console.log("object", data.nameInput);
                             returnDatas.push({
                               orderId: data.order_id,
                               nameInput: data.name_input,
@@ -914,11 +935,11 @@ function () {
               };
             });
 
-          case 16:
-            _context10.next = 21;
+          case 18:
+            _context10.next = 23;
             break;
 
-          case 18:
+          case 20:
             console.log("/getwaterfall:获取waterfall成功，但无数据！");
             ctx.response.statusCode = _userStatus.statusCodeList.success;
             ctx.response.body = {
@@ -926,38 +947,56 @@ function () {
               returnDatas: returnDatas
             };
 
-          case 21:
-            _context10.next = 28;
+          case 23:
+            _context10.next = 30;
             break;
 
-          case 23:
-            _context10.prev = 23;
-            _context10.t0 = _context10["catch"](7);
+          case 25:
+            _context10.prev = 25;
+            _context10.t0 = _context10["catch"](8);
             console.log('/getwaterfall:数据库操作失败！', _context10.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getwaterfall:数据库操作失败！';
 
-          case 28:
-            _context10.next = 33;
+          case 30:
+            _context10.next = 35;
             break;
 
-          case 30:
+          case 32:
             console.log('/getwaterfall:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getwaterfall:您请求的用户code有误!';
 
-          case 33:
+          case 35:
           case "end":
             return _context10.stop();
         }
       }
-    }, _callee10, null, [[7, 23]]);
+    }, _callee10, null, [[8, 25]]);
   }));
 
   return function getWaterFall(_x17, _x18) {
     return _ref9.apply(this, arguments);
   };
-}();
+}(); // const getMoreData = async (ctx, next: () => Promise<any>) => {
+//     const { code } = ctx.request.query
+//     const returnDatas: ReturnDataObject[] = []
+//     if (code) {
+//         const result = await getOpenIdAndSessionKey(code)
+//         const { openid } = result
+//         try {
+//         }catch(err){
+//             console.log('/getmoredata:数据库操作失败！', err)
+//             ctx.response.status = statusCodeList.fail
+//             ctx.response.body = 'getmoredata:数据库操作失败！'
+//         }
+//     }else {
+//         console.log('/getmoredata:您请求的用户code有误!')
+//         ctx.response.status = statusCodeList.fail
+//         ctx.response.body = '/getmoredata:您请求的用户code有误!'
+//     }
+// }
+
 
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
@@ -967,5 +1006,5 @@ app.use(_koaRoute["default"].get('/getgoodsinfo', getGoodsInfo));
 app.use(_koaRoute["default"].get('/getuserinfo', getUserInfo));
 app.use(_koaRoute["default"].get('/getmoney', getMoney));
 app.use(_koaRoute["default"].get('/getorderinfo', getOrderInfo));
-app.use(_koaRoute["default"].get('/getwaterfall', getWaterFall));
-app.listen(3000);
+app.use(_koaRoute["default"].get('/getwaterfall', getWaterFall)); // app.use(route.get('/getmoredata', getMoreData))
+// app.listen(3000)

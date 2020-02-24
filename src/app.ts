@@ -13,9 +13,18 @@ import upLoadCos from './utils/upload-cos'
 import { appId, appSecret } from './static-name/mini-program-info'
 import { statusCodeList, statusList } from './static-name/user-status'
 import { resolve } from 'dns'
-
+import http from 'http'
+import https from 'https'
 
 const app = new Koa()
+const keyContent=fs.readFileSync(path.join(__dirname, '../https/2.key'))
+const certContent=fs.readFileSync(path.join(__dirname, '../https/1.crt'))
+const httpsOption = {
+    key :keyContent,
+    cert: certContent
+}
+http.createServer(app.callback()).listen(3000);
+// https.createServer(httpsOption, app.callback()).listen(3000)
 app.use(body({ multipart: true }))
 // app.use(bodyParse())
 
@@ -389,14 +398,16 @@ interface ReturnDataObject {
     avatarUrl: string;
 }
 const getWaterFall = async (ctx, next: () => Promise<any>) => {
-    const { code } = ctx.request.query
+    const { code,page } = ctx.request.query
+    const startIndex=(page-1)*2
     const returnDatas: ReturnDataObject[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT 8;`
-            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,2;`
+            const poolResult1 = await transformPoolQuery(sql1, [openid,startIndex])
+            // console.log(poolResult1)
             if (poolResult1.length > 0) {
                 if (poolResult1.length % 2 !== 0) {
                     poolResult1.pop()
@@ -459,6 +470,27 @@ const getWaterFall = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/getwaterfall:您请求的用户code有误!'
     }
 }
+
+// const getMoreData = async (ctx, next: () => Promise<any>) => {
+//     const { code } = ctx.request.query
+//     const returnDatas: ReturnDataObject[] = []
+//     if (code) {
+//         const result = await getOpenIdAndSessionKey(code)
+//         const { openid } = result
+//         try {
+
+//         }catch(err){
+//             console.log('/getmoredata:数据库操作失败！', err)
+//             ctx.response.status = statusCodeList.fail
+//             ctx.response.body = 'getmoredata:数据库操作失败！'
+//         }
+//     }else {
+//         console.log('/getmoredata:您请求的用户code有误!')
+//         ctx.response.status = statusCodeList.fail
+//         ctx.response.body = '/getmoredata:您请求的用户code有误!'
+//     }
+// }
+
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -468,4 +500,5 @@ app.use(route.get('/getuserinfo', getUserInfo))
 app.use(route.get('/getmoney', getMoney))
 app.use(route.get('/getorderinfo', getOrderInfo))
 app.use(route.get('/getwaterfall', getWaterFall))
-app.listen(3000)
+// app.use(route.get('/getmoredata', getMoreData))
+// app.listen(3000)
