@@ -17,10 +17,10 @@ import http from 'http'
 import https from 'https'
 
 const app = new Koa()
-const keyContent=fs.readFileSync(path.join(__dirname, '../https/2.key'))
-const certContent=fs.readFileSync(path.join(__dirname, '../https/1.crt'))
+const keyContent = fs.readFileSync(path.join(__dirname, '../https/2.key'))
+const certContent = fs.readFileSync(path.join(__dirname, '../https/1.crt'))
 const httpsOption = {
-    key :keyContent,
+    key: keyContent,
     cert: certContent
 }
 http.createServer(app.callback()).listen(3000);
@@ -398,15 +398,15 @@ interface ReturnDataObject {
     avatarUrl: string;
 }
 const getWaterFall = async (ctx, next: () => Promise<any>) => {
-    const { code,page } = ctx.request.query
-    const startIndex=(page-1)*2
+    const { code, page } = ctx.request.query
+    const startIndex = (page - 1) * 2
     const returnDatas: ReturnDataObject[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
             const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,2;`
-            const poolResult1 = await transformPoolQuery(sql1, [openid,startIndex])
+            const poolResult1 = await transformPoolQuery(sql1, [openid, startIndex])
             // console.log(poolResult1)
             if (poolResult1.length > 0) {
                 if (poolResult1.length % 2 !== 0) {
@@ -471,25 +471,117 @@ const getWaterFall = async (ctx, next: () => Promise<any>) => {
     }
 }
 
-// const getMoreData = async (ctx, next: () => Promise<any>) => {
-//     const { code } = ctx.request.query
-//     const returnDatas: ReturnDataObject[] = []
-//     if (code) {
-//         const result = await getOpenIdAndSessionKey(code)
-//         const { openid } = result
-//         try {
+const pay = async (ctx, next: () => Promise<any>) => {
+    const { code, orderId, payForMePrice, payForOtherPrice } = ctx.request.body
+    // console.log(payForMePrice,payForMePrice===0,payForOtherPrice,payForOtherPrice===0)
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            if (payForMePrice !== 0) {
+                const sql1 = `SELECT balance FROM user_money WHERE open_id =?`
+                const poolResult1 = await transformPoolQuery(sql1, [openid])
+                if (poolResult1.length === 1) {
+                    const balance = poolResult1[0].balance
+                    if (balance >= payForMePrice) {
+                        const sql2 = `UPDATE  user_money SET balance = balance - ?,pay=pay + ?  where open_id =? `
+                        const poolResult2 = await transformPoolQuery(sql2, [payForMePrice, payForMePrice, openid])
+                        if (poolResult2.affectedRows === 1) {
+                            const sql3 = `SELECT open_id FROM goods WHERE order_id =?`
+                            const poolResult3 = await transformPoolQuery(sql3, [orderId])
+                            if (poolResult3.length === 1) {
+                                const salederOpenId = poolResult3[0].open_id
+                                const sql4 = `UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?`
+                                const poolResult4 = await transformPoolQuery(sql4, ['trading', openid, orderId])
+                                if (poolResult4.affectedRows === 1) {
+                                    const sql5 = `UPDATE user_money SET balance = balance + ? ,income = income + ? WHERE open_id = ?`
+                                    const poolResult5 = await transformPoolQuery(sql5, [payForMePrice, payForMePrice, salederOpenId])
+                                    if (poolResult5.affectedRows === 1) {
+                                        const sql6 = `UPDATE user_order SET bougth = bougth + 1 WHERE open_id =?`
+                                        const poolResult6 = await transformPoolQuery(sql6, [openid])
+                                        if (poolResult6.affectedRows === 1) {
+                                            const sql7 = `UPDATE user_order SET saled = saled + 1 WHERE open_id =?`
+                                            const poolResult7 = await transformPoolQuery(sql7, [salederOpenId])
+                                            if (poolResult7.affectedRows === 1) {
+                                                console.log('/pay:支付成功！')
+                                                ctx.response.status = statusCodeList.success
+                                                ctx.response.body = {
+                                                    status:statusList.success
+                                                }
+                                            }
+                                        }
+                                    }
 
-//         }catch(err){
-//             console.log('/getmoredata:数据库操作失败！', err)
-//             ctx.response.status = statusCodeList.fail
-//             ctx.response.body = 'getmoredata:数据库操作失败！'
-//         }
-//     }else {
-//         console.log('/getmoredata:您请求的用户code有误!')
-//         ctx.response.status = statusCodeList.fail
-//         ctx.response.body = '/getmoredata:您请求的用户code有误!'
-//     }
-// }
+                                }
+                            }
+                        } else {
+                            console.log('/pay:余额不足，支付失败！')
+                            ctx.response.status = statusCodeList.fail
+                            ctx.response.body = {
+                                status:statusList.fail
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (payForOtherPrice !== 0) {
+                const sql1 = `SELECT balance FROM user_money WHERE open_id =?`
+                const poolResult1 = await transformPoolQuery(sql1, [openid])
+                if (poolResult1.length === 1) {
+                    const balance = poolResult1[0].balance
+                    if (balance >= payForMePrice) {
+                        const sql2 = `UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id =? `
+                        const poolResult2 = await transformPoolQuery(sql2, [payForOtherPrice, payForOtherPrice, openid])
+                        if (poolResult2.affectedRows === 1) {
+                            const sql3 = `SELECT open_id FROM goods WHERE order_id =?`
+                            const poolResult3 = await transformPoolQuery(sql3, [orderId])
+                            if (poolResult3.length === 1) {
+                                const salederOpenId = poolResult3[0].open_id
+                                const sql4 = `UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?`
+                                const poolResult4 = await transformPoolQuery(sql4, ['trading', openid, orderId])
+                                if (poolResult4.affectedRows === 1) {
+                                    const sql5 = `UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?`
+                                    const poolResult5 = await transformPoolQuery(sql5, [payForOtherPrice, payForOtherPrice, salederOpenId])
+                                    if (poolResult5.affectedRows === 1) {
+                                        const sql6 = `UPDATE user_order SET bougth = bougth + 1 WHERE open_id =?`
+                                        const poolResult6 = await transformPoolQuery(sql6, [openid])
+                                        if (poolResult6.affectedRows === 1) {
+                                            const sql7 = `UPDATE user_order SET saled = saled + 1 WHERE open_id =?`
+                                            const poolResult7 = await transformPoolQuery(sql7, [salederOpenId])
+                                            if (poolResult7.affectedRows === 1) {
+                                                console.log('/pay:支付成功！')
+                                                ctx.response.status = statusCodeList.success
+                                                ctx.response.body = {
+                                                    status:statusList.success
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+                        } else {
+                            console.log('/pay:余额不足，支付失败！')
+                            ctx.response.status = statusCodeList.fail
+                            ctx.response.body = {
+                                status:statusList.fail
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('/pay:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/pay:数据库操作失败！'
+        }
+    } else {
+        console.log('/pay:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/pay:您请求的用户code有误!'
+    }
+}
 
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
@@ -500,5 +592,5 @@ app.use(route.get('/getuserinfo', getUserInfo))
 app.use(route.get('/getmoney', getMoney))
 app.use(route.get('/getorderinfo', getOrderInfo))
 app.use(route.get('/getwaterfall', getWaterFall))
-// app.use(route.get('/getmoredata', getMoreData))
+app.use(route.post('/pay', pay))
 // app.listen(3000)
