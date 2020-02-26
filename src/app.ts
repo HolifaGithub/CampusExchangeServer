@@ -494,20 +494,16 @@ const pay = async (ctx, next: () => Promise<any>) => {
                                 const sql4 = `UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?`
                                 const poolResult4 = await transformPoolQuery(sql4, ['trading', openid, orderId])
                                 if (poolResult4.affectedRows === 1) {
-                                    const sql5 = `UPDATE user_money SET balance = balance + ? ,income = income + ? WHERE open_id = ?`
-                                    const poolResult5 = await transformPoolQuery(sql5, [payForMePrice, payForMePrice, salederOpenId])
+                                    const sql5 = `UPDATE user_order SET trading = trading +1 WHERE open_id =?`
+                                    const poolResult5 = await transformPoolQuery(sql5, [openid])
                                     if (poolResult5.affectedRows === 1) {
-                                        const sql6 = `UPDATE user_order SET bougth = bougth + 1 WHERE open_id =?`
-                                        const poolResult6 = await transformPoolQuery(sql6, [openid])
+                                        const sql6 = `UPDATE user_order SET released = released -1 , trading = trading +1 WHERE open_id =?`
+                                        const poolResult6 = await transformPoolQuery(sql6, [salederOpenId])
                                         if (poolResult6.affectedRows === 1) {
-                                            const sql7 = `UPDATE user_order SET saled = saled + 1 WHERE open_id =?`
-                                            const poolResult7 = await transformPoolQuery(sql7, [salederOpenId])
-                                            if (poolResult7.affectedRows === 1) {
-                                                console.log('/pay:支付成功！')
-                                                ctx.response.status = statusCodeList.success
-                                                ctx.response.body = {
-                                                    status:statusList.success
-                                                }
+                                            console.log('/pay:支付成功！')
+                                            ctx.response.status = statusCodeList.success
+                                            ctx.response.body = {
+                                                status: statusList.success
                                             }
                                         }
                                     }
@@ -518,7 +514,7 @@ const pay = async (ctx, next: () => Promise<any>) => {
                             console.log('/pay:余额不足，支付失败！')
                             ctx.response.status = statusCodeList.fail
                             ctx.response.body = {
-                                status:statusList.fail
+                                status: statusList.fail
                             }
                         }
                     }
@@ -553,7 +549,7 @@ const pay = async (ctx, next: () => Promise<any>) => {
                                                 console.log('/pay:支付成功！')
                                                 ctx.response.status = statusCodeList.success
                                                 ctx.response.body = {
-                                                    status:statusList.success
+                                                    status: statusList.success
                                                 }
                                             }
                                         }
@@ -565,7 +561,7 @@ const pay = async (ctx, next: () => Promise<any>) => {
                             console.log('/pay:余额不足，支付失败！')
                             ctx.response.status = statusCodeList.fail
                             ctx.response.body = {
-                                status:statusList.fail
+                                status: statusList.fail
                             }
                         }
                     }
@@ -583,6 +579,122 @@ const pay = async (ctx, next: () => Promise<any>) => {
     }
 }
 
+
+const trading = async (ctx, next: () => Promise<any>) => {
+    const { orderId } = ctx.request.query
+    if (orderId) {
+        try {
+            const sql1 = `SELECT open_id,buy_open_id,pay_for_me_price,pay_for_other_price FROM goods WHERE order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [orderId])
+            if (poolResult1.length === 1) {
+                const openId = poolResult1[0].open_id
+                const buyOpenId = poolResult1[0].buy_open_id
+                const payForMePrice = poolResult1[0].pay_for_me_price
+                const payForOtherPrice=poolResult1[0].pay_for_other_price
+                if(parseFloat(payForMePrice)!==0){
+                    const sql2 = `SELECT phone,user_address FROM user_info WHERE open_id = ?`
+                    const poolResult2 = await transformPoolQuery(sql2, [openId])
+                    if (poolResult2.length === 1) {
+                        const salederPhone = poolResult2[0].phone
+                        const salederAddress = poolResult2[0].user_address
+                        const sql3 = `SELECT phone,user_address,avatar_url,nick_name FROM user_info WHERE open_id = ?`
+                        const poolResult3 = await transformPoolQuery(sql3, [buyOpenId])
+                        if (poolResult3.length === 1) {
+                            const buierPhone = poolResult3[0].phone
+                            const buierAddress = poolResult3[0].user_address
+                            const buierAvatarUrl = poolResult3[0].avatar_url
+                            const buierNickName = poolResult3[0].nick_name
+                            const orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18)
+                            const sql4 = `UPDATE user_money SET balance = balance + ? ,income = income + ? WHERE open_id = ?`
+                            const poolResult4 = await transformPoolQuery(sql4, [parseFloat(payForMePrice), parseFloat(payForMePrice), openId])
+                            if (poolResult4.affectedRows === 1) {
+                                const sql5=`UPDATE user_order SET trading = trading - 1,saled = saled +1 WHERE open_id =? `
+                                const poolResult5 = await transformPoolQuery(sql5, [openId])
+                                if(poolResult5.affectedRows===1){
+                                    const sql6=`UPDATE user_order SET trading = trading - 1,bougth = bougth +1 WHERE open_id =? `
+                                    const poolResult6 = await transformPoolQuery(sql6, [buyOpenId])
+                                    if(poolResult6.affectedRows===1){
+                                        const sql7=`UPDATE goods SET order_status = ? WHERE order_id =? `
+                                        const poolResult7 = await transformPoolQuery(sql7, ['saled',buyOpenId])
+                                        if(poolResult7.affectedRows===1){
+                                            console.log('/trading:交易成功')
+                                            ctx.response.status = statusCodeList.success
+                                            ctx.response.body = {
+                                                status: statusList.success,
+                                                salederPhone: salederPhone,
+                                                salederAddress: salederAddress,
+                                                buierPhone: buierPhone,
+                                                buierAddress: buierAddress,
+                                                buierAvatarUrl: buierAvatarUrl,
+                                                buierNickName: buierNickName,
+                                                orderCode: orderCode
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if(parseFloat(payForOtherPrice)!==0){
+                    const sql2 = `SELECT phone,user_address FROM user_info WHERE open_id = ?`
+                    const poolResult2 = await transformPoolQuery(sql2, [openId])
+                    if (poolResult2.length === 1) {
+                        const salederPhone = poolResult2[0].phone
+                        const salederAddress = poolResult2[0].user_address
+                        const sql3 = `SELECT phone,user_address,avatar_url,nick_name FROM user_info WHERE open_id = ?`
+                        const poolResult3 = await transformPoolQuery(sql3, [buyOpenId])
+                        if (poolResult3.length === 1) {
+                            const buierPhone = poolResult3[0].phone
+                            const buierAddress = poolResult3[0].user_address
+                            const buierAvatarUrl = poolResult3[0].avatar_url
+                            const buierNickName = poolResult3[0].nick_name
+                            const orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18)
+                            const sql4 = `UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?`
+                            const poolResult4 = await transformPoolQuery(sql4, [parseFloat(payForOtherPrice), parseFloat(payForOtherPrice), openId])
+                            if (poolResult4.affectedRows === 1) {
+                                const sql5=`UPDATE user_order SET trading = trading - 1,saled = saled +1 WHERE open_id =? `
+                                const poolResult5 = await transformPoolQuery(sql5, [openId])
+                                if(poolResult5.affectedRows===1){
+                                    const sql6=`UPDATE user_order SET trading = trading - 1,bougth = bougth +1 WHERE open_id =? `
+                                    const poolResult6 = await transformPoolQuery(sql6, [buyOpenId])
+                                    if(poolResult6.affectedRows===1){
+                                        const sql7=`UPDATE goods SET order_status = ? WHERE order_id =? `
+                                        const poolResult7 = await transformPoolQuery(sql7, ['saled',buyOpenId])
+                                        if(poolResult7.affectedRows===1){
+                                            console.log('/trading:交易成功')
+                                            ctx.response.status = statusCodeList.success
+                                            ctx.response.body = {
+                                                status: statusList.success,
+                                                salederPhone: salederPhone,
+                                                salederAddress: salederAddress,
+                                                buierPhone: buierPhone,
+                                                buierAddress: buierAddress,
+                                                buierAvatarUrl: buierAvatarUrl,
+                                                buierNickName: buierNickName,
+                                                orderCode: orderCode
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('/trading:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/trading:数据库操作失败！'
+        }
+    } else {
+        console.log('/trading:您请求的用户orderId有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/trading:您请求的用户orderId有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -593,4 +705,5 @@ app.use(route.get('/getmoney', getMoney))
 app.use(route.get('/getorderinfo', getOrderInfo))
 app.use(route.get('/getwaterfall', getWaterFall))
 app.use(route.post('/pay', pay))
+app.use(route.get('/trading', trading))
 // app.listen(3000)
