@@ -405,7 +405,7 @@ const getWaterFall = async (ctx, next: () => Promise<any>) => {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,2;`
+            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,2;`
             const poolResult1 = await transformPoolQuery(sql1, [openid, startIndex])
             // console.log(poolResult1)
             if (poolResult1.length > 0) {
@@ -479,26 +479,32 @@ const pay = async (ctx, next: () => Promise<any>) => {
         const { openid } = result
         try {
             if (payForMePrice !== 0) {
+                //查询买家的余额
                 const sql1 = `SELECT balance FROM user_money WHERE open_id =?`
                 const poolResult1 = await transformPoolQuery(sql1, [openid])
                 if (poolResult1.length === 1) {
                     const balance = poolResult1[0].balance
                     if (balance >= payForMePrice) {
+                        //买家的余额减去商品的价格，支付的总额加上买的商品的价格
                         const sql2 = `UPDATE  user_money SET balance = balance - ?,pay=pay + ?  where open_id =? `
                         const poolResult2 = await transformPoolQuery(sql2, [payForMePrice, payForMePrice, openid])
                         if (poolResult2.affectedRows === 1) {
+                            //通过order_id查询卖家的open_id
                             const sql3 = `SELECT open_id FROM goods WHERE order_id =?`
                             const poolResult3 = await transformPoolQuery(sql3, [orderId])
                             if (poolResult3.length === 1) {
-                                const salederOpenId = poolResult3[0].open_id
+                                const salerOpenId = poolResult3[0].open_id
+                                //更新商品表设置商品的状态为tarding，设置买家的open_id
                                 const sql4 = `UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?`
                                 const poolResult4 = await transformPoolQuery(sql4, ['trading', openid, orderId])
                                 if (poolResult4.affectedRows === 1) {
+                                    //更新买家order表的trading数量+1
                                     const sql5 = `UPDATE user_order SET trading = trading +1 WHERE open_id =?`
                                     const poolResult5 = await transformPoolQuery(sql5, [openid])
                                     if (poolResult5.affectedRows === 1) {
+                                        //更新卖家order表released数量-1，trading数量+1
                                         const sql6 = `UPDATE user_order SET released = released -1 , trading = trading +1 WHERE open_id =?`
-                                        const poolResult6 = await transformPoolQuery(sql6, [salederOpenId])
+                                        const poolResult6 = await transformPoolQuery(sql6, [salerOpenId])
                                         if (poolResult6.affectedRows === 1) {
                                             console.log('/pay:支付成功！')
                                             ctx.response.status = statusCodeList.success
@@ -507,14 +513,14 @@ const pay = async (ctx, next: () => Promise<any>) => {
                                             }
                                         }
                                     }
-
                                 }
                             }
                         } else {
                             console.log('/pay:余额不足，支付失败！')
                             ctx.response.status = statusCodeList.fail
                             ctx.response.body = {
-                                status: statusList.fail
+                                status: statusList.fail,
+                                msg: '支付失败！您的余额不足，请充值！'
                             }
                         }
                     }
@@ -522,46 +528,48 @@ const pay = async (ctx, next: () => Promise<any>) => {
             }
 
             if (payForOtherPrice !== 0) {
-                const sql1 = `SELECT balance FROM user_money WHERE open_id =?`
-                const poolResult1 = await transformPoolQuery(sql1, [openid])
+                //查询卖家的open_id
+                const sql1 = `SELECT open_id FROM goods WHERE order_id =?`
+                const poolResult1 = await transformPoolQuery(sql1, [orderId])
                 if (poolResult1.length === 1) {
-                    const balance = poolResult1[0].balance
-                    if (balance >= payForMePrice) {
-                        const sql2 = `UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id =? `
-                        const poolResult2 = await transformPoolQuery(sql2, [payForOtherPrice, payForOtherPrice, openid])
-                        if (poolResult2.affectedRows === 1) {
-                            const sql3 = `SELECT open_id FROM goods WHERE order_id =?`
-                            const poolResult3 = await transformPoolQuery(sql3, [orderId])
-                            if (poolResult3.length === 1) {
-                                const salederOpenId = poolResult3[0].open_id
+                    const salerOpenId = poolResult1[0].open_id
+                    //查询卖家money表的余额
+                    const sql2 = `SELECT balance FROM user_money WHERE open_id =?`
+                    const poolResult2 = await transformPoolQuery(sql2, [salerOpenId])
+                    if (poolResult2.length === 1) {
+                        const balance = poolResult2[0].balance
+                        if (balance >= payForOtherPrice) {
+                            //如果余额大于要支付给买家的钱的话就将其余额减去给买家的钱，支付总额加上给买家的钱
+                            const sql3 = `UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?`
+                            const poolResult3 = await transformPoolQuery(sql3, [payForOtherPrice, payForOtherPrice, salerOpenId])
+                            if (poolResult3.affectedRows === 1) {
+                                //更新商品表设置商品状态为trading，设置买家的open_id
                                 const sql4 = `UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?`
                                 const poolResult4 = await transformPoolQuery(sql4, ['trading', openid, orderId])
                                 if (poolResult4.affectedRows === 1) {
-                                    const sql5 = `UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?`
-                                    const poolResult5 = await transformPoolQuery(sql5, [payForOtherPrice, payForOtherPrice, salederOpenId])
+                                    //更新买家order表的trading数量+1
+                                    const sql5 = `UPDATE user_order SET trading = trading +1 WHERE open_id =?`
+                                    const poolResult5 = await transformPoolQuery(sql5, [openid])
                                     if (poolResult5.affectedRows === 1) {
-                                        const sql6 = `UPDATE user_order SET bougth = bougth + 1 WHERE open_id =?`
-                                        const poolResult6 = await transformPoolQuery(sql6, [openid])
+                                        //更新卖家order表released数量-1，trading数量+1
+                                        const sql6 = `UPDATE user_order SET released = released -1 , trading = trading +1 WHERE open_id =?`
+                                        const poolResult6 = await transformPoolQuery(sql6, [salerOpenId])
                                         if (poolResult6.affectedRows === 1) {
-                                            const sql7 = `UPDATE user_order SET saled = saled + 1 WHERE open_id =?`
-                                            const poolResult7 = await transformPoolQuery(sql7, [salederOpenId])
-                                            if (poolResult7.affectedRows === 1) {
-                                                console.log('/pay:支付成功！')
-                                                ctx.response.status = statusCodeList.success
-                                                ctx.response.body = {
-                                                    status: statusList.success
-                                                }
+                                            console.log('/pay:支付成功！')
+                                            ctx.response.status = statusCodeList.success
+                                            ctx.response.body = {
+                                                status: statusList.success
                                             }
                                         }
                                     }
-
                                 }
                             }
                         } else {
                             console.log('/pay:余额不足，支付失败！')
                             ctx.response.status = statusCodeList.fail
                             ctx.response.body = {
-                                status: statusList.fail
+                                status: statusList.fail,
+                                msg: '交易失败，对方的余额不足以支付给您！'
                             }
                         }
                     }
@@ -589,97 +597,30 @@ const trading = async (ctx, next: () => Promise<any>) => {
             if (poolResult1.length === 1) {
                 const openId = poolResult1[0].open_id
                 const buyOpenId = poolResult1[0].buy_open_id
-                const payForMePrice = poolResult1[0].pay_for_me_price
-                const payForOtherPrice=poolResult1[0].pay_for_other_price
-                if(parseFloat(payForMePrice)!==0){
-                    const sql2 = `SELECT phone,user_address FROM user_info WHERE open_id = ?`
-                    const poolResult2 = await transformPoolQuery(sql2, [openId])
-                    if (poolResult2.length === 1) {
-                        const salederPhone = poolResult2[0].phone
-                        const salederAddress = poolResult2[0].user_address
-                        const sql3 = `SELECT phone,user_address,avatar_url,nick_name FROM user_info WHERE open_id = ?`
-                        const poolResult3 = await transformPoolQuery(sql3, [buyOpenId])
-                        if (poolResult3.length === 1) {
-                            const buierPhone = poolResult3[0].phone
-                            const buierAddress = poolResult3[0].user_address
-                            const buierAvatarUrl = poolResult3[0].avatar_url
-                            const buierNickName = poolResult3[0].nick_name
-                            const orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18)
-                            const sql4 = `UPDATE user_money SET balance = balance + ? ,income = income + ? WHERE open_id = ?`
-                            const poolResult4 = await transformPoolQuery(sql4, [parseFloat(payForMePrice), parseFloat(payForMePrice), openId])
-                            if (poolResult4.affectedRows === 1) {
-                                const sql5=`UPDATE user_order SET trading = trading - 1,saled = saled +1 WHERE open_id =? `
-                                const poolResult5 = await transformPoolQuery(sql5, [openId])
-                                if(poolResult5.affectedRows===1){
-                                    const sql6=`UPDATE user_order SET trading = trading - 1,bougth = bougth +1 WHERE open_id =? `
-                                    const poolResult6 = await transformPoolQuery(sql6, [buyOpenId])
-                                    if(poolResult6.affectedRows===1){
-                                        const sql7=`UPDATE goods SET order_status = ? WHERE order_id =? `
-                                        const poolResult7 = await transformPoolQuery(sql7, ['saled',buyOpenId])
-                                        if(poolResult7.affectedRows===1){
-                                            console.log('/trading:交易成功')
-                                            ctx.response.status = statusCodeList.success
-                                            ctx.response.body = {
-                                                status: statusList.success,
-                                                salederPhone: salederPhone,
-                                                salederAddress: salederAddress,
-                                                buierPhone: buierPhone,
-                                                buierAddress: buierAddress,
-                                                buierAvatarUrl: buierAvatarUrl,
-                                                buierNickName: buierNickName,
-                                                orderCode: orderCode
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-
-                if(parseFloat(payForOtherPrice)!==0){
-                    const sql2 = `SELECT phone,user_address FROM user_info WHERE open_id = ?`
-                    const poolResult2 = await transformPoolQuery(sql2, [openId])
-                    if (poolResult2.length === 1) {
-                        const salederPhone = poolResult2[0].phone
-                        const salederAddress = poolResult2[0].user_address
-                        const sql3 = `SELECT phone,user_address,avatar_url,nick_name FROM user_info WHERE open_id = ?`
-                        const poolResult3 = await transformPoolQuery(sql3, [buyOpenId])
-                        if (poolResult3.length === 1) {
-                            const buierPhone = poolResult3[0].phone
-                            const buierAddress = poolResult3[0].user_address
-                            const buierAvatarUrl = poolResult3[0].avatar_url
-                            const buierNickName = poolResult3[0].nick_name
-                            const orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18)
-                            const sql4 = `UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?`
-                            const poolResult4 = await transformPoolQuery(sql4, [parseFloat(payForOtherPrice), parseFloat(payForOtherPrice), openId])
-                            if (poolResult4.affectedRows === 1) {
-                                const sql5=`UPDATE user_order SET trading = trading - 1,saled = saled +1 WHERE open_id =? `
-                                const poolResult5 = await transformPoolQuery(sql5, [openId])
-                                if(poolResult5.affectedRows===1){
-                                    const sql6=`UPDATE user_order SET trading = trading - 1,bougth = bougth +1 WHERE open_id =? `
-                                    const poolResult6 = await transformPoolQuery(sql6, [buyOpenId])
-                                    if(poolResult6.affectedRows===1){
-                                        const sql7=`UPDATE goods SET order_status = ? WHERE order_id =? `
-                                        const poolResult7 = await transformPoolQuery(sql7, ['saled',buyOpenId])
-                                        if(poolResult7.affectedRows===1){
-                                            console.log('/trading:交易成功')
-                                            ctx.response.status = statusCodeList.success
-                                            ctx.response.body = {
-                                                status: statusList.success,
-                                                salederPhone: salederPhone,
-                                                salederAddress: salederAddress,
-                                                buierPhone: buierPhone,
-                                                buierAddress: buierAddress,
-                                                buierAvatarUrl: buierAvatarUrl,
-                                                buierNickName: buierNickName,
-                                                orderCode: orderCode
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                const sql2 = `SELECT phone,user_address FROM user_info WHERE open_id = ?`
+                const poolResult2 = await transformPoolQuery(sql2, [openId])
+                if (poolResult2.length === 1) {
+                    const salederPhone = poolResult2[0].phone
+                    const salederAddress = poolResult2[0].user_address
+                    const sql3 = `SELECT phone,user_address,avatar_url,nick_name FROM user_info WHERE open_id = ?`
+                    const poolResult3 = await transformPoolQuery(sql3, [buyOpenId])
+                    if (poolResult3.length === 1) {
+                        const buierPhone = poolResult3[0].phone
+                        const buierAddress = poolResult3[0].user_address
+                        const buierAvatarUrl = poolResult3[0].avatar_url
+                        const buierNickName = poolResult3[0].nick_name
+                        const orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18)
+                        console.log('/trading:交易成功')
+                        ctx.response.status = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
+                            salederPhone: salederPhone,
+                            salederAddress: salederAddress,
+                            buierPhone: buierPhone,
+                            buierAddress: buierAddress,
+                            buierAvatarUrl: buierAvatarUrl,
+                            buierNickName: buierNickName,
+                            orderCode: orderCode
                         }
                     }
                 }

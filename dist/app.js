@@ -2,8 +2,6 @@
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
-
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
@@ -850,7 +848,7 @@ function () {
             result = _context10.sent;
             openid = result.openid;
             _context10.prev = 8;
-            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,2;";
+            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,2;";
             _context10.next = 12;
             return (0, _transformPoolQuery["default"])(sql1, [openid, startIndex]);
 
@@ -987,7 +985,7 @@ function () {
   var _ref11 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee11(ctx, next) {
-    var _ctx$request$body, code, orderId, payForMePrice, payForOtherPrice, result, openid, sql1, poolResult1, balance, sql2, poolResult2, sql3, poolResult3, salederOpenId, sql4, poolResult4, sql5, poolResult5, sql6, poolResult6, _sql, _poolResult, _balance, _sql2, _poolResult2, _sql3, _poolResult3, _salederOpenId, _sql4, _poolResult4, _sql5, _poolResult5, _sql6, _poolResult6, sql7, poolResult7;
+    var _ctx$request$body, code, orderId, payForMePrice, payForOtherPrice, result, openid, sql1, poolResult1, balance, sql2, poolResult2, sql3, poolResult3, salerOpenId, sql4, poolResult4, sql5, poolResult5, sql6, poolResult6, _sql, _poolResult, _salerOpenId, _sql2, _poolResult2, _balance, _sql3, _poolResult3, _sql4, _poolResult4, _sql5, _poolResult5, _sql6, _poolResult6;
 
     return _regenerator["default"].wrap(function _callee11$(_context11) {
       while (1) {
@@ -996,7 +994,7 @@ function () {
             _ctx$request$body = ctx.request.body, code = _ctx$request$body.code, orderId = _ctx$request$body.orderId, payForMePrice = _ctx$request$body.payForMePrice, payForOtherPrice = _ctx$request$body.payForOtherPrice; // console.log(payForMePrice,payForMePrice===0,payForOtherPrice,payForOtherPrice===0)
 
             if (!code) {
-              _context11.next = 99;
+              _context11.next = 94;
               break;
             }
 
@@ -1013,6 +1011,7 @@ function () {
               break;
             }
 
+            //查询买家的余额
             sql1 = "SELECT balance FROM user_money WHERE open_id =?";
             _context11.next = 11;
             return (0, _transformPoolQuery["default"])(sql1, [openid]);
@@ -1032,6 +1031,7 @@ function () {
               break;
             }
 
+            //买家的余额减去商品的价格，支付的总额加上买的商品的价格
             sql2 = "UPDATE  user_money SET balance = balance - ?,pay=pay + ?  where open_id =? ";
             _context11.next = 18;
             return (0, _transformPoolQuery["default"])(sql2, [payForMePrice, payForMePrice, openid]);
@@ -1044,6 +1044,7 @@ function () {
               break;
             }
 
+            //通过order_id查询卖家的open_id
             sql3 = "SELECT open_id FROM goods WHERE order_id =?";
             _context11.next = 23;
             return (0, _transformPoolQuery["default"])(sql3, [orderId]);
@@ -1056,7 +1057,8 @@ function () {
               break;
             }
 
-            salederOpenId = poolResult3[0].open_id;
+            salerOpenId = poolResult3[0].open_id; //更新商品表设置商品的状态为tarding，设置买家的open_id
+
             sql4 = "UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?";
             _context11.next = 29;
             return (0, _transformPoolQuery["default"])(sql4, ['trading', openid, orderId]);
@@ -1069,7 +1071,8 @@ function () {
               break;
             }
 
-            sql5 = "UPDATE user_order SET bougth = bougth + 1, trading = trading +1 WHERE open_id =?";
+            //更新买家order表的trading数量+1
+            sql5 = "UPDATE user_order SET trading = trading +1 WHERE open_id =?";
             _context11.next = 34;
             return (0, _transformPoolQuery["default"])(sql5, [openid]);
 
@@ -1081,9 +1084,10 @@ function () {
               break;
             }
 
+            //更新卖家order表released数量-1，trading数量+1
             sql6 = "UPDATE user_order SET released = released -1 , trading = trading +1 WHERE open_id =?";
             _context11.next = 39;
-            return (0, _transformPoolQuery["default"])(sql6, [salederOpenId]);
+            return (0, _transformPoolQuery["default"])(sql6, [salerOpenId]);
 
           case 39:
             poolResult6 = _context11.sent;
@@ -1104,59 +1108,64 @@ function () {
             console.log('/pay:余额不足，支付失败！');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = {
-              status: _userStatus.statusList.fail
+              status: _userStatus.statusList.fail,
+              msg: '支付失败！您的余额不足，请充值！'
             };
 
           case 46:
             if (!(payForOtherPrice !== 0)) {
-              _context11.next = 90;
+              _context11.next = 85;
               break;
             }
 
-            _sql = "SELECT balance FROM user_money WHERE open_id =?";
+            //查询卖家的open_id
+            _sql = "SELECT open_id FROM goods WHERE order_id =?";
             _context11.next = 50;
-            return (0, _transformPoolQuery["default"])(_sql, [openid]);
+            return (0, _transformPoolQuery["default"])(_sql, [orderId]);
 
           case 50:
             _poolResult = _context11.sent;
 
             if (!(_poolResult.length === 1)) {
-              _context11.next = 90;
-              break;
-            }
-
-            _balance = _poolResult[0].balance;
-
-            if (!(_balance >= payForMePrice)) {
-              _context11.next = 90;
-              break;
-            }
-
-            _sql2 = "UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id =? ";
-            _context11.next = 57;
-            return (0, _transformPoolQuery["default"])(_sql2, [payForOtherPrice, payForOtherPrice, openid]);
-
-          case 57:
-            _poolResult2 = _context11.sent;
-
-            if (!(_poolResult2.affectedRows === 1)) {
-              _context11.next = 87;
-              break;
-            }
-
-            _sql3 = "SELECT open_id FROM goods WHERE order_id =?";
-            _context11.next = 62;
-            return (0, _transformPoolQuery["default"])(_sql3, [orderId]);
-
-          case 62:
-            _poolResult3 = _context11.sent;
-
-            if (!(_poolResult3.length === 1)) {
               _context11.next = 85;
               break;
             }
 
-            _salederOpenId = _poolResult3[0].open_id;
+            _salerOpenId = _poolResult[0].open_id; //查询卖家money表的余额
+
+            _sql2 = "SELECT balance FROM user_money WHERE open_id =?";
+            _context11.next = 56;
+            return (0, _transformPoolQuery["default"])(_sql2, [_salerOpenId]);
+
+          case 56:
+            _poolResult2 = _context11.sent;
+
+            if (!(_poolResult2.length === 1)) {
+              _context11.next = 85;
+              break;
+            }
+
+            _balance = _poolResult2[0].balance;
+
+            if (!(_balance >= payForOtherPrice)) {
+              _context11.next = 82;
+              break;
+            }
+
+            //如果余额大于要支付给买家的钱的话就将其余额减去给买家的钱，支付总额加上给买家的钱
+            _sql3 = "UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?";
+            _context11.next = 63;
+            return (0, _transformPoolQuery["default"])(_sql3, [payForOtherPrice, payForOtherPrice, _salerOpenId]);
+
+          case 63:
+            _poolResult3 = _context11.sent;
+
+            if (!(_poolResult3.affectedRows === 1)) {
+              _context11.next = 80;
+              break;
+            }
+
+            //更新商品表设置商品状态为trading，设置买家的open_id
             _sql4 = "UPDATE goods SET order_status = ?,buy_open_id = ? WHERE order_id = ?";
             _context11.next = 68;
             return (0, _transformPoolQuery["default"])(_sql4, ['trading', openid, orderId]);
@@ -1165,42 +1174,32 @@ function () {
             _poolResult4 = _context11.sent;
 
             if (!(_poolResult4.affectedRows === 1)) {
-              _context11.next = 85;
+              _context11.next = 80;
               break;
             }
 
-            _sql5 = "UPDATE user_money SET balance = balance - ? ,pay = pay + ? WHERE open_id = ?";
+            //更新买家order表的trading数量+1
+            _sql5 = "UPDATE user_order SET trading = trading +1 WHERE open_id =?";
             _context11.next = 73;
-            return (0, _transformPoolQuery["default"])(_sql5, [payForOtherPrice, payForOtherPrice, _salederOpenId]);
+            return (0, _transformPoolQuery["default"])(_sql5, [openid]);
 
           case 73:
             _poolResult5 = _context11.sent;
 
             if (!(_poolResult5.affectedRows === 1)) {
-              _context11.next = 85;
+              _context11.next = 80;
               break;
             }
 
-            _sql6 = "UPDATE user_order SET bougth = bougth + 1 WHERE open_id =?";
+            //更新卖家order表released数量-1，trading数量+1
+            _sql6 = "UPDATE user_order SET released = released -1 , trading = trading +1 WHERE open_id =?";
             _context11.next = 78;
-            return (0, _transformPoolQuery["default"])(_sql6, [openid]);
+            return (0, _transformPoolQuery["default"])(_sql6, [_salerOpenId]);
 
           case 78:
             _poolResult6 = _context11.sent;
 
-            if (!(_poolResult6.affectedRows === 1)) {
-              _context11.next = 85;
-              break;
-            }
-
-            sql7 = "UPDATE user_order SET saled = saled + 1 WHERE open_id =?";
-            _context11.next = 83;
-            return (0, _transformPoolQuery["default"])(sql7, [_salederOpenId]);
-
-          case 83:
-            poolResult7 = _context11.sent;
-
-            if (poolResult7.affectedRows === 1) {
+            if (_poolResult6.affectedRows === 1) {
               console.log('/pay:支付成功！');
               ctx.response.status = _userStatus.statusCodeList.success;
               ctx.response.body = {
@@ -1208,43 +1207,44 @@ function () {
               };
             }
 
-          case 85:
-            _context11.next = 90;
+          case 80:
+            _context11.next = 85;
             break;
 
-          case 87:
+          case 82:
             console.log('/pay:余额不足，支付失败！');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = {
-              status: _userStatus.statusList.fail
+              status: _userStatus.statusList.fail,
+              msg: '交易失败，对方的余额不足以支付给您！'
             };
 
-          case 90:
-            _context11.next = 97;
+          case 85:
+            _context11.next = 92;
             break;
 
-          case 92:
-            _context11.prev = 92;
+          case 87:
+            _context11.prev = 87;
             _context11.t0 = _context11["catch"](6);
             console.log('/pay:数据库操作失败！', _context11.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/pay:数据库操作失败！';
 
-          case 97:
-            _context11.next = 102;
+          case 92:
+            _context11.next = 97;
             break;
 
-          case 99:
+          case 94:
             console.log('/pay:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/pay:您请求的用户code有误!';
 
-          case 102:
+          case 97:
           case "end":
             return _context11.stop();
         }
       }
-    }, _callee11, null, [[6, 92]]);
+    }, _callee11, null, [[6, 87]]);
   }));
 
   return function pay(_x20, _x21) {
@@ -1258,7 +1258,7 @@ function () {
   var _ref12 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee12(ctx, next) {
-    var orderId, sql1, poolResult1, openId, buyOpenId, payForMePrice, payForOtherPrice, sql2, poolResult2, salederPhone, salederAddress, sql3, poolResult3, buierPhone, buierAddress, buierAvatarUrl, buierNickName, orderCode;
+    var orderId, sql1, poolResult1, openId, buyOpenId, sql2, poolResult2, salederPhone, salederAddress, sql3, poolResult3, buierPhone, buierAddress, buierAvatarUrl, buierNickName, orderCode;
     return _regenerator["default"].wrap(function _callee12$(_context12) {
       while (1) {
         switch (_context12.prev = _context12.next) {
@@ -1266,7 +1266,7 @@ function () {
             orderId = ctx.request.query.orderId;
 
             if (!orderId) {
-              _context12.next = 34;
+              _context12.next = 31;
               break;
             }
 
@@ -1279,34 +1279,31 @@ function () {
             poolResult1 = _context12.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context12.next = 25;
+              _context12.next = 22;
               break;
             }
 
             openId = poolResult1[0].open_id;
             buyOpenId = poolResult1[0].buy_open_id;
-            payForMePrice = poolResult1[0].pay_for_me_price;
-            payForOtherPrice = poolResult1[0].pay_for_other_price;
-            console.log((0, _typeof2["default"])(payForMePrice), (0, _typeof2["default"])(payForOtherPrice));
             sql2 = "SELECT phone,user_address FROM user_info WHERE open_id = ?";
-            _context12.next = 16;
+            _context12.next = 13;
             return (0, _transformPoolQuery["default"])(sql2, [openId]);
 
-          case 16:
+          case 13:
             poolResult2 = _context12.sent;
 
             if (!(poolResult2.length === 1)) {
-              _context12.next = 25;
+              _context12.next = 22;
               break;
             }
 
             salederPhone = poolResult2[0].phone;
             salederAddress = poolResult2[0].user_address;
             sql3 = "SELECT phone,user_address,avatar_url,nick_name FROM user_info WHERE open_id = ?";
-            _context12.next = 23;
+            _context12.next = 20;
             return (0, _transformPoolQuery["default"])(sql3, [buyOpenId]);
 
-          case 23:
+          case 20:
             poolResult3 = _context12.sent;
 
             if (poolResult3.length === 1) {
@@ -1314,10 +1311,7 @@ function () {
               buierAddress = poolResult3[0].user_address;
               buierAvatarUrl = poolResult3[0].avatar_url;
               buierNickName = poolResult3[0].nick_name;
-              orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18); // const sql4 = `UPDATE user_money SET balance = balance + ? ,income = income + ? WHERE open_id = ?`
-              // const poolResult4 = await transformPoolQuery(sql4, [payForMePrice, payForMePrice, openId])
-              // if (poolResult4.affectedRows === 1) {
-
+              orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18);
               console.log('/trading:交易成功');
               ctx.response.status = _userStatus.statusCodeList.success;
               ctx.response.body = {
@@ -1328,37 +1322,36 @@ function () {
                 buierAddress: buierAddress,
                 buierAvatarUrl: buierAvatarUrl,
                 buierNickName: buierNickName,
-                orderCode: orderCode // }
-
+                orderCode: orderCode
               };
             }
 
-          case 25:
-            _context12.next = 32;
+          case 22:
+            _context12.next = 29;
             break;
 
-          case 27:
-            _context12.prev = 27;
+          case 24:
+            _context12.prev = 24;
             _context12.t0 = _context12["catch"](2);
             console.log('/trading:数据库操作失败！', _context12.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/trading:数据库操作失败！';
 
-          case 32:
-            _context12.next = 37;
+          case 29:
+            _context12.next = 34;
             break;
 
-          case 34:
+          case 31:
             console.log('/trading:您请求的用户orderId有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/trading:您请求的用户orderId有误!';
 
-          case 37:
+          case 34:
           case "end":
             return _context12.stop();
         }
       }
-    }, _callee12, null, [[2, 27]]);
+    }, _callee12, null, [[2, 24]]);
   }));
 
   return function trading(_x22, _x23) {
