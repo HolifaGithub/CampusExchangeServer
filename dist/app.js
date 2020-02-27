@@ -24,11 +24,13 @@ var _getOpenIdAndSessionKey = _interopRequireDefault(require("./utils/getOpenIdA
 
 var _uploadCos = _interopRequireDefault(require("./utils/upload-cos"));
 
+var _searchKeyWord = _interopRequireDefault(require("./utils/search-key-word"));
+
 var _miniProgramInfo = require("./static-name/mini-program-info");
 
 var _userStatus = require("./static-name/user-status");
 
-var _https = _interopRequireDefault(require("https"));
+var _http = _interopRequireDefault(require("http"));
 
 // import bodyParse from 'koa-bodyparser'
 var body = require('koa-body');
@@ -42,9 +44,10 @@ var certContent = _fs["default"].readFileSync(_path["default"].join(__dirname, '
 var httpsOption = {
   key: keyContent,
   cert: certContent
-}; // http.createServer(app.callback()).listen(3000);
+};
 
-_https["default"].createServer(httpsOption, app.callback()).listen(3000);
+_http["default"].createServer(app.callback()).listen(3000); // https.createServer(httpsOption, app.callback()).listen(3000)
+
 
 app.use(body({
   multipart: true
@@ -56,7 +59,7 @@ function () {
   var _ref = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee(ctx, next) {
-    var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, checkSignatureResult, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3, sql4, result4, sql5, result5;
+    var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, checkSignatureResult, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3, sql4, result4, sql5, result5, sql6, result6;
     return _regenerator["default"].wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -66,7 +69,7 @@ function () {
             requestBody = ctx.request.body;
 
             if (!requestBody.code) {
-              _context.next = 58;
+              _context.next = 64;
               break;
             }
 
@@ -79,7 +82,7 @@ function () {
             openid = result.openid, session_key = result.session_key;
 
             if (!(openid && session_key)) {
-              _context.next = 56;
+              _context.next = 62;
               break;
             }
 
@@ -87,7 +90,7 @@ function () {
             checkSignatureResult = (0, _checkSignature.checkSignature)(signature, rawData, session_key);
 
             if (!checkSignatureResult) {
-              _context.next = 53;
+              _context.next = 59;
               break;
             }
 
@@ -148,7 +151,7 @@ function () {
               break;
             }
 
-            sql4 = "DELETE FROM user_info WHERE open_id = ?;";
+            sql4 = "UPDATE user_info SET nick_name='',gender=0 ,country='',province='',city='',avatar_url='' WHERE open_id = ?;";
             _context.next = 36;
             return (0, _transformPoolQuery["default"])(sql4, [openid]);
 
@@ -162,12 +165,12 @@ function () {
             }
 
           case 38:
-            if (!(!isNewUser && isDeleteSuccess || isNewUser)) {
+            if (!(!isNewUser && isDeleteSuccess)) {
               _context.next = 44;
               break;
             }
 
-            sql5 = "INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);";
+            sql5 = "UPDATE  user_info SET open_id=?,nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=?;";
             _context.next = 42;
             return (0, _transformPoolQuery["default"])(sql5, [openid, nickName, gender, country, province, city, avatarUrl]);
 
@@ -188,40 +191,66 @@ function () {
             }
 
           case 44:
-            _context.next = 51;
+            if (!isNewUser) {
+              _context.next = 50;
+              break;
+            }
+
+            sql6 = "INSERT INTO  user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);";
+            _context.next = 48;
+            return (0, _transformPoolQuery["default"])(sql6, [openid, nickName, gender, country, province, city, avatarUrl]);
+
+          case 48:
+            result6 = _context.sent;
+
+            if (result6.affectedRows === 1) {
+              console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684\u767B\u5F55\u5F00\u653E\u6570\u636E\u5DF2\u4FDD\u5B58\u5230\u6570\u636E\u5E93\uFF01"));
+              ctx.response.status = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                isNewUser: isNewUser
+              };
+            } else {
+              console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684\u767B\u5F55\u5F00\u653E\u6570\u636E\u4FDD\u5B58\u6570\u636E\u5E93\u5931\u8D25\uFF01"));
+              ctx.response.status = _userStatus.statusCodeList.fail;
+              ctx.response.body = '数据库操作失败！';
+            }
+
+          case 50:
+            _context.next = 57;
             break;
 
-          case 46:
-            _context.prev = 46;
+          case 52:
+            _context.prev = 52;
             _context.t0 = _context["catch"](15);
             console.log('/login:数据库操作失败！', _context.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:数据库操作失败！';
 
-          case 51:
-            _context.next = 56;
+          case 57:
+            _context.next = 62;
             break;
 
-          case 53:
+          case 59:
             console.log('/login:您的签名signature有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:您的签名signature有误!';
 
-          case 56:
-            _context.next = 61;
+          case 62:
+            _context.next = 67;
             break;
 
-          case 58:
+          case 64:
             console.log('/login:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:您请求的用户code有误!';
 
-          case 61:
+          case 67:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, null, [[15, 46]]);
+    }, _callee, null, [[15, 52]]);
   }));
 
   return function login(_x, _x2) {
@@ -922,7 +951,7 @@ function () {
         switch (_context10.prev = _context10.next) {
           case 0:
             _ctx$request$query3 = ctx.request.query, code = _ctx$request$query3.code, page = _ctx$request$query3.page;
-            startIndex = (page - 1) * 2;
+            startIndex = (page - 1) * 4;
             returnDatas = [];
 
             if (!code) {
@@ -937,7 +966,7 @@ function () {
             result = _context10.sent;
             openid = result.openid;
             _context10.prev = 8;
-            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,2;";
+            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,4;";
             _context10.next = 12;
             return (0, _transformPoolQuery["default"])(sql1, [openid, startIndex]);
 
@@ -1448,6 +1477,127 @@ function () {
   };
 }();
 
+var search =
+/*#__PURE__*/
+function () {
+  var _ref13 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee13(ctx, next) {
+    var value, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searcResult;
+
+    return _regenerator["default"].wrap(function _callee13$(_context13) {
+      while (1) {
+        switch (_context13.prev = _context13.next) {
+          case 0:
+            value = ctx.request.query.value;
+
+            if (!(value.length > 0)) {
+              _context13.next = 35;
+              break;
+            }
+
+            valueArray = value.split(" ");
+            sql1 = "SELECT type_one,type_two,type_three,name_input FROM goods";
+            typeOneNameArray = [];
+            typeTwoNameArray = [];
+            typeThreeNameArray = [];
+            nameInputArray = [];
+            _context13.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, []);
+
+          case 10:
+            poolResult1 = _context13.sent;
+
+            if (!(poolResult1.length > 0)) {
+              _context13.next = 33;
+              break;
+            }
+
+            _iteratorNormalCompletion = true;
+            _didIteratorError = false;
+            _iteratorError = undefined;
+            _context13.prev = 15;
+
+            for (_iterator = poolResult1[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              row = _step.value;
+
+              if (row.type_one) {
+                typeOneNameArray.push(row.type_one);
+              }
+
+              if (row.type_two) {
+                typeTwoNameArray.push(row.type_two);
+              }
+
+              if (row.type_three) {
+                typeThreeNameArray.push(row.type_three);
+              }
+
+              if (row.name_input) {
+                nameInputArray.push(row.name_input);
+              }
+            } // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
+
+
+            _context13.next = 23;
+            break;
+
+          case 19:
+            _context13.prev = 19;
+            _context13.t0 = _context13["catch"](15);
+            _didIteratorError = true;
+            _iteratorError = _context13.t0;
+
+          case 23:
+            _context13.prev = 23;
+            _context13.prev = 24;
+
+            if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+              _iterator["return"]();
+            }
+
+          case 26:
+            _context13.prev = 26;
+
+            if (!_didIteratorError) {
+              _context13.next = 29;
+              break;
+            }
+
+            throw _iteratorError;
+
+          case 29:
+            return _context13.finish(26);
+
+          case 30:
+            return _context13.finish(23);
+
+          case 31:
+            searcResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray);
+            console.log(searcResult);
+
+          case 33:
+            _context13.next = 38;
+            break;
+
+          case 35:
+            console.log('/search:用户的搜索词为空!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/search:用户的搜索词为空!';
+
+          case 38:
+          case "end":
+            return _context13.stop();
+        }
+      }
+    }, _callee13, null, [[15, 19, 23, 31], [24,, 26, 30]]);
+  }));
+
+  return function search(_x24, _x25) {
+    return _ref13.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -1458,4 +1608,5 @@ app.use(_koaRoute["default"].get('/getmoney', getMoney));
 app.use(_koaRoute["default"].get('/getorderinfo', getOrderInfo));
 app.use(_koaRoute["default"].get('/getwaterfall', getWaterFall));
 app.use(_koaRoute["default"].post('/pay', pay));
-app.use(_koaRoute["default"].get('/trading', trading)); // app.listen(3000)
+app.use(_koaRoute["default"].get('/trading', trading));
+app.use(_koaRoute["default"].get('/search', search)); // app.listen(3000)

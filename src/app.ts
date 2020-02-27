@@ -10,6 +10,7 @@ import { WXBizDataCrypt } from './utils/WXBizDataCrypt'
 import transformPoolQuery from './utils/transformPoolQuery'
 import getOpenIdAndSessionKey from './utils/getOpenIdAndSessionKey'
 import upLoadCos from './utils/upload-cos'
+import SearchKeyWord from './utils/search-key-word'
 import { appId, appSecret } from './static-name/mini-program-info'
 import { statusCodeList, statusList } from './static-name/user-status'
 import { resolve } from 'dns'
@@ -23,8 +24,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-// http.createServer(app.callback()).listen(3000);
-https.createServer(httpsOption, app.callback()).listen(3000)
+http.createServer(app.callback()).listen(3000)
+// https.createServer(httpsOption, app.callback()).listen(3000)
 app.use(body({ multipart: true }))
 // app.use(bodyParse())
 
@@ -73,7 +74,7 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     }
                     //2.如果不是新用户的话就将数据库的先前的用户数据清空
                     if (!isNewUser) {
-                        const sql4 = `DELETE FROM user_info WHERE open_id = ?;`
+                        const sql4 = `UPDATE user_info SET nick_name='',gender=0 ,country='',province='',city='',avatar_url='' WHERE open_id = ?;`
                         const result4 = await transformPoolQuery(sql4, [openid])
                         if (result4.affectedRows === 1) {
                             isDeleteSuccess = true
@@ -81,10 +82,26 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                             isDeleteSuccess = false
                         }
                     }
-                    if (!isNewUser && isDeleteSuccess || isNewUser) {
-                        const sql5 = `INSERT INTO user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);`
+                    if (!isNewUser && isDeleteSuccess) {
+                        const sql5 = `UPDATE  user_info SET open_id=?,nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=?;`
                         const result5 = await transformPoolQuery(sql5, [openid, nickName, gender, country, province, city, avatarUrl])
                         if (result5.affectedRows === 1) {
+                            console.log(`/login:用户：${nickName}的登录开放数据已保存到数据库！`)
+                            ctx.response.status = statusCodeList.success
+                            ctx.response.body = {
+                                status: statusList.success,
+                                isNewUser: isNewUser
+                            }
+                        } else {
+                            console.log(`/login:用户：${nickName}的登录开放数据保存数据库失败！`)
+                            ctx.response.status = statusCodeList.fail
+                            ctx.response.body = '数据库操作失败！'
+                        }
+                    }
+                    if (isNewUser) {
+                        const sql6 = `INSERT INTO  user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);`
+                        const result6 = await transformPoolQuery(sql6, [openid, nickName, gender, country, province, city, avatarUrl])
+                        if (result6.affectedRows === 1) {
                             console.log(`/login:用户：${nickName}的登录开放数据已保存到数据库！`)
                             ctx.response.status = statusCodeList.success
                             ctx.response.body = {
@@ -276,10 +293,10 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
             ctx.response.body = '/getgoodsinfo:数据库操作失败！'
         }
 
-    }else if(code && orderId.length===0) {
+    } else if (code && orderId.length === 0) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
-        try{
+        try {
             const sql1 = `SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
             const poolResult1 = await transformPoolQuery(sql1, [openid])
             if (poolResult1.length === 1) {
@@ -314,12 +331,12 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                     ctx.response.statusCode = statusCodeList.success
                 }
             }
-        }catch (err) {
+        } catch (err) {
             console.log('/getgoodsinfo:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/getgoodsinfo:数据库操作失败！'
         }
-    }else {
+    } else {
         console.log('/getgoodsinfo:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/getgoodsinfo:您请求的用户code有误!'
@@ -447,13 +464,13 @@ interface ReturnDataObject {
 }
 const getWaterFall = async (ctx, next: () => Promise<any>) => {
     const { code, page } = ctx.request.query
-    const startIndex = (page - 1) * 2
+    const startIndex = (page - 1) * 4
     const returnDatas: ReturnDataObject[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,2;`
+            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,4;`
             const poolResult1 = await transformPoolQuery(sql1, [openid, startIndex])
             // console.log(poolResult1)
             if (poolResult1.length > 0) {
@@ -684,6 +701,58 @@ const trading = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/trading:您请求的用户orderId有误!'
     }
 }
+
+const search = async (ctx, next: () => Promise<any>) => {
+    const { value } = ctx.request.query
+    if (value.length > 0) {
+        const valueArray = value.split(" ")
+        try {
+            const sql1 = `SELECT type_one,type_two,type_three,name_input FROM goods`
+            const typeOneNameArray: string[] = []
+            const typeTwoNameArray: string[] = []
+            const typeThreeNameArray: string[] = []
+            const nameInputArray: string[] = []
+            const poolResult1 = await transformPoolQuery(sql1, [])
+            if (poolResult1.length > 0) {
+                for (let row of poolResult1) {
+                    if (row.type_one) {
+                        typeOneNameArray.push(row.type_one)
+                    }
+                    if (row.type_two) {
+                        typeTwoNameArray.push(row.type_two)
+                    }
+                    if (row.type_three) {
+                        typeThreeNameArray.push(row.type_three)
+                    }
+                    if (row.name_input) {
+                        nameInputArray.push(row.name_input)
+                    }
+                }
+                // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
+                let searcResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray)
+                if (searcResult) {
+                    const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ? = ? AND order_status = 'released' LIMIT ?,6;`
+                }else{
+                    console.log('/search:搜索结果为空！')
+                    ctx.response.status = statusCodeList.fail
+                    ctx.response.body = {
+                        status:statusList.fail,
+                        msg:' /search:搜索结果为空！'
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('/search:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/search:数据库操作失败！'
+        }
+
+    } else {
+        console.log('/search:用户的搜索词为空!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/search:用户的搜索词为空!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -695,4 +764,5 @@ app.use(route.get('/getorderinfo', getOrderInfo))
 app.use(route.get('/getwaterfall', getWaterFall))
 app.use(route.post('/pay', pay))
 app.use(route.get('/trading', trading))
+app.use(route.get('/search', search))
 // app.listen(3000)
