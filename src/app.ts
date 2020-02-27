@@ -23,8 +23,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-http.createServer(app.callback()).listen(3000);
-// https.createServer(httpsOption, app.callback()).listen(3000)
+// http.createServer(app.callback()).listen(3000);
+https.createServer(httpsOption, app.callback()).listen(3000)
 app.use(body({ multipart: true }))
 // app.use(bodyParse())
 
@@ -229,49 +229,97 @@ const releasegoodspics = async (ctx, next: () => Promise<any>) => {
 
 const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
     const { code, orderId } = ctx.request.query
-    if (code) {
-        const result = await getOpenIdAndSessionKey(code)
-        const { openid } = result
+    if (code && orderId.length > 0) {
         try {
-            const sql1 = `SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
-            const poolResult1 = await transformPoolQuery(sql1, [openid])
-            const { nick_name, avatar_url, school } = poolResult1[0]
-            const sql2 = `SELECT * FROM goods WHERE order_id =?`
-            const poolResult2 = await transformPoolQuery(sql2, [orderId])
-            const { order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location } = poolResult2[0]
-            if (poolResult1.length === 1 && poolResult2.length === 1) {
-                console.log('/getgoodsinfo:获取商品详情成功！')
+            const sql1 = `SELECT open_id FROM goods WHERE order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [orderId])
+            if (poolResult1.length === 1) {
+                const salerOpenId = poolResult1[0].open_id
+                const sql2 = `SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
+                const poolResult2 = await transformPoolQuery(sql2, [salerOpenId])
+                if (poolResult2.length === 1) {
+                    const { nick_name, avatar_url, school } = poolResult2[0]
+                    const sql3 = `SELECT * FROM goods WHERE order_id =?`
+                    const poolResult3 = await transformPoolQuery(sql3, [orderId])
+                    if (poolResult3.length === 1) {
+                        const { order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location } = poolResult3[0]
+                        console.log('/getgoodsinfo:获取商品详情成功！')
+                        ctx.response.body = {
+                            status: statusList.success,
+                            orderId: order_id,
+                            orderTime: order_time,
+                            orderStatus: order_status,
+                            typeOne: type_one,
+                            typeTwo: type_two,
+                            typeThree: type_three,
+                            nameInput: name_input,
+                            goodsNumber: goods_number,
+                            newAndOldDegree: new_and_old_degree,
+                            mode: mode,
+                            objectOfPayment: object_of_payment,
+                            payForMePrice: pay_for_me_price,
+                            payForOtherPrice: pay_for_other_price,
+                            wantExchangeGoods: want_exchange_goods,
+                            describe: goods_describe,
+                            picsLocation: pics_location,
+                            nickName: nick_name,
+                            avatarUrl: avatar_url,
+                            school: school
+                        }
+                        ctx.response.statusCode = statusCodeList.success
+                    }
+                }
             }
-            ctx.response.body = {
-                status: statusList.success,
-                orderId: order_id,
-                orderTime: order_time,
-                orderStatus: order_status,
-                typeOne: type_one,
-                typeTwo: type_two,
-                typeThree: type_three,
-                nameInput: name_input,
-                goodsNumber: goods_number,
-                newAndOldDegree: new_and_old_degree,
-                mode: mode,
-                objectOfPayment: object_of_payment,
-                payForMePrice: pay_for_me_price,
-                payForOtherPrice: pay_for_other_price,
-                wantExchangeGoods: want_exchange_goods,
-                describe: goods_describe,
-                picsLocation: pics_location,
-                nickName: nick_name,
-                avatarUrl: avatar_url,
-                school: school
-            }
-            ctx.response.statusCode = statusCodeList.success
         } catch (err) {
             console.log('/getgoodsinfo:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/getgoodsinfo:数据库操作失败！'
         }
 
-    } else {
+    }else if(code && orderId.length===0) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try{
+            const sql1 = `SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length === 1) {
+                const { nick_name, avatar_url, school } = poolResult1[0]
+                const sql2 = `SELECT * FROM goods WHERE order_id =?`
+                const poolResult2 = await transformPoolQuery(sql2, [orderId])
+                if (poolResult2.length === 1) {
+                    const { order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location } = poolResult2[0]
+                    console.log('/getgoodsinfo:获取商品详情成功！')
+                    ctx.response.body = {
+                        status: statusList.success,
+                        orderId: order_id,
+                        orderTime: order_time,
+                        orderStatus: order_status,
+                        typeOne: type_one,
+                        typeTwo: type_two,
+                        typeThree: type_three,
+                        nameInput: name_input,
+                        goodsNumber: goods_number,
+                        newAndOldDegree: new_and_old_degree,
+                        mode: mode,
+                        objectOfPayment: object_of_payment,
+                        payForMePrice: pay_for_me_price,
+                        payForOtherPrice: pay_for_other_price,
+                        wantExchangeGoods: want_exchange_goods,
+                        describe: goods_describe,
+                        picsLocation: pics_location,
+                        nickName: nick_name,
+                        avatarUrl: avatar_url,
+                        school: school
+                    }
+                    ctx.response.statusCode = statusCodeList.success
+                }
+            }
+        }catch (err) {
+            console.log('/getgoodsinfo:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getgoodsinfo:数据库操作失败！'
+        }
+    }else {
         console.log('/getgoodsinfo:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/getgoodsinfo:您请求的用户code有误!'
