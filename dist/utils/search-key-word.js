@@ -24,7 +24,10 @@ function SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThree
           var result = reg.test(word);
 
           if (result) {
-            return i;
+            return {
+              value: i,
+              col: 'type_one'
+            };
           }
         }
       } catch (err) {
@@ -55,7 +58,10 @@ function SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThree
           var _result = _reg.test(word);
 
           if (_result) {
-            return j;
+            return {
+              value: j,
+              col: 'type_two'
+            };
           }
         }
       } catch (err) {
@@ -86,7 +92,10 @@ function SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThree
           var _result2 = _reg2.test(word);
 
           if (_result2) {
-            return k;
+            return {
+              value: k,
+              col: 'type_three'
+            };
           }
         }
       } catch (err) {
@@ -117,7 +126,10 @@ function SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThree
           var _result3 = _reg3.test(word);
 
           if (_result3) {
-            return z;
+            return {
+              value: z,
+              col: 'name_input'
+            };
           }
         }
       } catch (err) {
@@ -150,7 +162,7 @@ function SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThree
     }
   }
 
-  return '';
+  return false;
 }
 
 var _default = SearchKeyWord;

@@ -16,6 +16,7 @@ import { statusCodeList, statusList } from './static-name/user-status'
 import { resolve } from 'dns'
 import http from 'http'
 import https from 'https'
+import { start } from 'repl'
 
 const app = new Koa()
 const keyContent = fs.readFileSync(path.join(__dirname, '../https/2.key'))
@@ -470,7 +471,7 @@ const getWaterFall = async (ctx, next: () => Promise<any>) => {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,4;`
+            const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,4;`
             const poolResult1 = await transformPoolQuery(sql1, [openid, startIndex])
             // console.log(poolResult1)
             if (poolResult1.length > 0) {
@@ -703,7 +704,9 @@ const trading = async (ctx, next: () => Promise<any>) => {
 }
 
 const search = async (ctx, next: () => Promise<any>) => {
-    const { value } = ctx.request.query
+    const { value,page } = ctx.request.query
+    const startIndex = (page - 1) * 6
+    const returnDatas: ReturnDataObject[] = []
     if (value.length > 0) {
         const valueArray = value.split(" ")
         try {
@@ -729,9 +732,49 @@ const search = async (ctx, next: () => Promise<any>) => {
                     }
                 }
                 // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
-                let searcResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray)
-                if (searcResult) {
-                    const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ? = ? AND order_status = 'released' LIMIT ?,6;`
+                let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray)
+                if (searchResult) {
+                    const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ${searchResult.col} = ? AND order_status = 'released' LIMIT ?,6;`
+                    const poolResult2 = await transformPoolQuery(sql2, [searchResult.value,startIndex])
+                    await new Promise((resolve, reject) => {
+                        poolResult2.map(async (data) => {
+                            const sql3 = `SELECT nick_name,avatar_url from user_info WHERE open_id =?`
+                            const poolResult3 = await transformPoolQuery(sql3, [data.open_id])
+                            if (poolResult3.length === 1) {
+                                let topPicSrc
+                                const len = data.pics_location.length
+                                if (len === 0) {
+                                    topPicSrc = ''
+                                } else {
+                                    topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                                }
+                                returnDatas.push({
+                                    orderId: data.order_id,
+                                    nameInput: data.name_input,
+                                    newAndOldDegree: data.new_and_old_degree,
+                                    mode: data.mode,
+                                    objectOfPayment: data.object_of_payment,
+                                    payForMePrice: data.pay_for_me_price,
+                                    payForOtherPrice: data.pay_for_other_price,
+                                    wantExchangeGoods: data.want_exchange_goods,
+                                    topPicSrc: topPicSrc,
+                                    watchedPeople: data.watched_people,
+                                    nickName: poolResult2[0].nick_name,
+                                    avatarUrl: poolResult2[0].avatar_url
+                                })
+                            }
+                            if (returnDatas.length === poolResult2.length) {
+                                resolve()
+                            }
+                        })
+                    }).then(() => {
+                        console.log("/search:搜索成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
+                            returnDatas: returnDatas
+                        }
+                    })
                 }else{
                     console.log('/search:搜索结果为空！')
                     ctx.response.status = statusCodeList.fail

@@ -1482,41 +1482,44 @@ var search =
 function () {
   var _ref13 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
-  _regenerator["default"].mark(function _callee13(ctx, next) {
-    var value, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searcResult;
+  _regenerator["default"].mark(function _callee14(ctx, next) {
+    var _ctx$request$query4, value, page, startIndex, returnDatas, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searchResult, sql2, poolResult2;
 
-    return _regenerator["default"].wrap(function _callee13$(_context13) {
+    return _regenerator["default"].wrap(function _callee14$(_context14) {
       while (1) {
-        switch (_context13.prev = _context13.next) {
+        switch (_context14.prev = _context14.next) {
           case 0:
-            value = ctx.request.query.value;
+            _ctx$request$query4 = ctx.request.query, value = _ctx$request$query4.value, page = _ctx$request$query4.page;
+            startIndex = (page - 1) * 6;
+            returnDatas = [];
 
             if (!(value.length > 0)) {
-              _context13.next = 35;
+              _context14.next = 57;
               break;
             }
 
             valueArray = value.split(" ");
+            _context14.prev = 5;
             sql1 = "SELECT type_one,type_two,type_three,name_input FROM goods";
             typeOneNameArray = [];
             typeTwoNameArray = [];
             typeThreeNameArray = [];
             nameInputArray = [];
-            _context13.next = 10;
+            _context14.next = 13;
             return (0, _transformPoolQuery["default"])(sql1, []);
 
-          case 10:
-            poolResult1 = _context13.sent;
+          case 13:
+            poolResult1 = _context14.sent;
 
             if (!(poolResult1.length > 0)) {
-              _context13.next = 33;
+              _context14.next = 48;
               break;
             }
 
             _iteratorNormalCompletion = true;
             _didIteratorError = false;
             _iteratorError = undefined;
-            _context13.prev = 15;
+            _context14.prev = 18;
 
             for (_iterator = poolResult1[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
               row = _step.value;
@@ -1539,58 +1542,162 @@ function () {
             } // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
 
 
-            _context13.next = 23;
+            _context14.next = 26;
             break;
 
-          case 19:
-            _context13.prev = 19;
-            _context13.t0 = _context13["catch"](15);
+          case 22:
+            _context14.prev = 22;
+            _context14.t0 = _context14["catch"](18);
             _didIteratorError = true;
-            _iteratorError = _context13.t0;
+            _iteratorError = _context14.t0;
 
-          case 23:
-            _context13.prev = 23;
-            _context13.prev = 24;
+          case 26:
+            _context14.prev = 26;
+            _context14.prev = 27;
 
             if (!_iteratorNormalCompletion && _iterator["return"] != null) {
               _iterator["return"]();
             }
 
-          case 26:
-            _context13.prev = 26;
+          case 29:
+            _context14.prev = 29;
 
             if (!_didIteratorError) {
-              _context13.next = 29;
+              _context14.next = 32;
               break;
             }
 
             throw _iteratorError;
 
-          case 29:
-            return _context13.finish(26);
-
-          case 30:
-            return _context13.finish(23);
-
-          case 31:
-            searcResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray);
-            console.log(searcResult);
+          case 32:
+            return _context14.finish(29);
 
           case 33:
-            _context13.next = 38;
+            return _context14.finish(26);
+
+          case 34:
+            searchResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray);
+
+            if (!searchResult) {
+              _context14.next = 45;
+              break;
+            }
+
+            sql2 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ".concat(searchResult.col, " = ? AND order_status = 'released' LIMIT ?,6;");
+            _context14.next = 39;
+            return (0, _transformPoolQuery["default"])(sql2, [searchResult.value, startIndex]);
+
+          case 39:
+            poolResult2 = _context14.sent;
+            console.log('poolResult2:', poolResult2);
+            _context14.next = 43;
+            return new Promise(function (resolve, reject) {
+              poolResult2.map(
+              /*#__PURE__*/
+              function () {
+                var _ref14 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee13(data) {
+                  var sql3, poolResult3, topPicSrc, len;
+                  return _regenerator["default"].wrap(function _callee13$(_context13) {
+                    while (1) {
+                      switch (_context13.prev = _context13.next) {
+                        case 0:
+                          sql3 = "SELECT nick_name,avatar_url from user_info WHERE open_id =?";
+                          _context13.next = 3;
+                          return (0, _transformPoolQuery["default"])(sql3, [data.open_id]);
+
+                        case 3:
+                          poolResult3 = _context13.sent;
+
+                          if (poolResult3.length === 1) {
+                            len = data.pics_location.length;
+
+                            if (len === 0) {
+                              topPicSrc = '';
+                            } else {
+                              topPicSrc = 'https://' + data.pics_location.split(';')[0];
+                            }
+
+                            returnDatas.push({
+                              orderId: data.order_id,
+                              nameInput: data.name_input,
+                              newAndOldDegree: data.new_and_old_degree,
+                              mode: data.mode,
+                              objectOfPayment: data.object_of_payment,
+                              payForMePrice: data.pay_for_me_price,
+                              payForOtherPrice: data.pay_for_other_price,
+                              wantExchangeGoods: data.want_exchange_goods,
+                              topPicSrc: topPicSrc,
+                              watchedPeople: data.watched_people,
+                              nickName: poolResult2[0].nick_name,
+                              avatarUrl: poolResult2[0].avatar_url
+                            });
+                          }
+
+                          if (returnDatas.length === poolResult2.length) {
+                            resolve();
+                          }
+
+                        case 6:
+                        case "end":
+                          return _context13.stop();
+                      }
+                    }
+                  }, _callee13);
+                }));
+
+                return function (_x26) {
+                  return _ref14.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/search:搜索成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            });
+
+          case 43:
+            _context14.next = 48;
             break;
 
-          case 35:
+          case 45:
+            console.log('/search:搜索结果为空！');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = {
+              status: _userStatus.statusList.fail,
+              msg: ' /search:搜索结果为空！'
+            };
+
+          case 48:
+            _context14.next = 55;
+            break;
+
+          case 50:
+            _context14.prev = 50;
+            _context14.t1 = _context14["catch"](5);
+            console.log('/search:数据库操作失败！', _context14.t1);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/search:数据库操作失败！';
+
+          case 55:
+            _context14.next = 60;
+            break;
+
+          case 57:
             console.log('/search:用户的搜索词为空!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:用户的搜索词为空!';
 
-          case 38:
+          case 60:
           case "end":
-            return _context13.stop();
+            return _context14.stop();
         }
       }
-    }, _callee13, null, [[15, 19, 23, 31], [24,, 26, 30]]);
+    }, _callee14, null, [[5, 50], [18, 22, 26, 34], [27,, 29, 33]]);
   }));
 
   return function search(_x24, _x25) {
