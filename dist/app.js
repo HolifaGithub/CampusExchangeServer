@@ -1704,6 +1704,245 @@ function () {
   };
 }();
 
+var orderList =
+/*#__PURE__*/
+function () {
+  var _ref15 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee17(ctx, next) {
+    var _ctx$request$query5, code, orderStatus, orderInfo, page, startIndex, orderListReturnDatas, result, openid, sql1, poolResult1, _sql9, _poolResult9;
+
+    return _regenerator["default"].wrap(function _callee17$(_context17) {
+      while (1) {
+        switch (_context17.prev = _context17.next) {
+          case 0:
+            _ctx$request$query5 = ctx.request.query, code = _ctx$request$query5.code, orderStatus = _ctx$request$query5.orderStatus, orderInfo = _ctx$request$query5.orderInfo, page = _ctx$request$query5.page;
+            startIndex = (page - 1) * 7;
+            orderListReturnDatas = [];
+
+            if (!code) {
+              _context17.next = 44;
+              break;
+            }
+
+            _context17.next = 6;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 6:
+            result = _context17.sent;
+            openid = result.openid;
+            _context17.prev = 8;
+
+            if (!(orderInfo == 'released' || orderInfo == 'trading' || orderInfo == 'saled')) {
+              _context17.next = 22;
+              break;
+            }
+
+            sql1 = "SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE open_id = ? AND order_status = ? LIMIT ?,7 ";
+            _context17.next = 13;
+            return (0, _transformPoolQuery["default"])(sql1, [openid, orderStatus, startIndex]);
+
+          case 13:
+            poolResult1 = _context17.sent;
+
+            if (!(poolResult1.length > 0)) {
+              _context17.next = 19;
+              break;
+            }
+
+            _context17.next = 17;
+            return new Promise(function (resolve, reject) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref16 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee15(data) {
+                  var topPicSrc, len;
+                  return _regenerator["default"].wrap(function _callee15$(_context15) {
+                    while (1) {
+                      switch (_context15.prev = _context15.next) {
+                        case 0:
+                          len = data.pics_location.length;
+
+                          if (len === 0) {
+                            topPicSrc = '';
+                          } else {
+                            topPicSrc = 'https://' + data.pics_location.split(';')[0];
+                          }
+
+                          orderListReturnDatas.push({
+                            orderId: data.order_id,
+                            nameInput: data.name_input,
+                            newAndOldDegree: data.new_and_old_degree,
+                            topPicSrc: topPicSrc,
+                            typeOne: data.type_one,
+                            typeTwo: data.type_two,
+                            typeThree: data.type_Three,
+                            goodsNumber: data.goodsNumber
+                          });
+
+                          if (orderListReturnDatas.length === poolResult1.length) {
+                            resolve();
+                          }
+
+                        case 4:
+                        case "end":
+                          return _context15.stop();
+                      }
+                    }
+                  }, _callee15);
+                }));
+
+                return function (_x29) {
+                  return _ref16.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/orderlist:获取orderlist成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: orderListReturnDatas,
+                orderStatus: orderStatus,
+                orderInfo: orderInfo
+              };
+            });
+
+          case 17:
+            _context17.next = 22;
+            break;
+
+          case 19:
+            console.log('/orderlist:该用户此状态下无订单！');
+            ctx.response.status = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: 'success',
+              returnDatas: orderListReturnDatas,
+              orderStatus: orderStatus,
+              orderInfo: orderInfo
+            };
+
+          case 22:
+            if (!(orderInfo == 'bougth')) {
+              _context17.next = 35;
+              break;
+            }
+
+            _sql9 = "SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE buy_open_id = ? AND order_status = ?";
+            _context17.next = 26;
+            return (0, _transformPoolQuery["default"])(_sql9, [openid, orderStatus]);
+
+          case 26:
+            _poolResult9 = _context17.sent;
+
+            if (!(_poolResult9.length > 0)) {
+              _context17.next = 32;
+              break;
+            }
+
+            _context17.next = 30;
+            return new Promise(function (resolve, reject) {
+              _poolResult9.map(
+              /*#__PURE__*/
+              function () {
+                var _ref17 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee16(data) {
+                  var topPicSrc, len;
+                  return _regenerator["default"].wrap(function _callee16$(_context16) {
+                    while (1) {
+                      switch (_context16.prev = _context16.next) {
+                        case 0:
+                          len = data.pics_location.length;
+
+                          if (len === 0) {
+                            topPicSrc = '';
+                          } else {
+                            topPicSrc = 'https://' + data.pics_location.split(';')[0];
+                          }
+
+                          orderListReturnDatas.push({
+                            orderId: data.order_id,
+                            nameInput: data.name_input,
+                            newAndOldDegree: data.new_and_old_degree,
+                            topPicSrc: topPicSrc,
+                            typeOne: data.type_one,
+                            typeTwo: data.type_two,
+                            typeThree: data.type_Three,
+                            goodsNumber: data.goodsNumber
+                          });
+
+                          if (orderListReturnDatas.length === _poolResult9.length) {
+                            resolve();
+                          }
+
+                        case 4:
+                        case "end":
+                          return _context16.stop();
+                      }
+                    }
+                  }, _callee16);
+                }));
+
+                return function (_x30) {
+                  return _ref17.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/orderlist:获取orderlist成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: orderListReturnDatas
+              };
+            });
+
+          case 30:
+            _context17.next = 35;
+            break;
+
+          case 32:
+            console.log('/orderlist:该用户此状态下无订单！');
+            ctx.response.status = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: 'success',
+              returnDatas: orderListReturnDatas
+            };
+
+          case 35:
+            _context17.next = 42;
+            break;
+
+          case 37:
+            _context17.prev = 37;
+            _context17.t0 = _context17["catch"](8);
+            console.log('/orderlist:数据库操作失败！', _context17.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/orderlist:数据库操作失败！';
+
+          case 42:
+            _context17.next = 47;
+            break;
+
+          case 44:
+            console.log('/orderlist:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/orderlist:您请求的用户code有误!';
+
+          case 47:
+          case "end":
+            return _context17.stop();
+        }
+      }
+    }, _callee17, null, [[8, 37]]);
+  }));
+
+  return function orderList(_x27, _x28) {
+    return _ref15.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -1715,4 +1954,5 @@ app.use(_koaRoute["default"].get('/getorderinfo', getOrderInfo));
 app.use(_koaRoute["default"].get('/getwaterfall', getWaterFall));
 app.use(_koaRoute["default"].post('/pay', pay));
 app.use(_koaRoute["default"].get('/trading', trading));
-app.use(_koaRoute["default"].get('/search', search)); // app.listen(3000)
+app.use(_koaRoute["default"].get('/search', search));
+app.use(_koaRoute["default"].get('/orderlist', orderList)); // app.listen(3000)

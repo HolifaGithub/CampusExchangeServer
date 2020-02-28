@@ -85,7 +85,7 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     }
                     if (!isNewUser && isDeleteSuccess) {
                         const sql5 = `UPDATE  user_info SET nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=? WHERE open_id = ?;`
-                        const result5 = await transformPoolQuery(sql5, [nickName, gender, country, province, city, avatarUrl,openid])
+                        const result5 = await transformPoolQuery(sql5, [nickName, gender, country, province, city, avatarUrl, openid])
                         if (result5.affectedRows === 1) {
                             console.log(`/login:用户：${nickName}的登录开放数据已保存到数据库！`)
                             ctx.response.status = statusCodeList.success
@@ -704,7 +704,7 @@ const trading = async (ctx, next: () => Promise<any>) => {
 }
 
 const search = async (ctx, next: () => Promise<any>) => {
-    const { value,page } = ctx.request.query
+    const { value, page } = ctx.request.query
     const startIndex = (page - 1) * 6
     const returnDatas: ReturnDataObject[] = []
     if (value.length > 0) {
@@ -735,7 +735,7 @@ const search = async (ctx, next: () => Promise<any>) => {
                 let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray)
                 if (searchResult) {
                     const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ${searchResult.col} = ? AND order_status = 'released' LIMIT ?,6;`
-                    const poolResult2 = await transformPoolQuery(sql2, [searchResult.value,startIndex])
+                    const poolResult2 = await transformPoolQuery(sql2, [searchResult.value, startIndex])
                     await new Promise((resolve, reject) => {
                         poolResult2.map(async (data) => {
                             const sql3 = `SELECT nick_name,avatar_url from user_info WHERE open_id =?`
@@ -775,12 +775,12 @@ const search = async (ctx, next: () => Promise<any>) => {
                             returnDatas: returnDatas
                         }
                     })
-                }else{
+                } else {
                     console.log('/search:搜索结果为空！')
                     ctx.response.status = statusCodeList.fail
                     ctx.response.body = {
-                        status:statusList.fail,
-                        msg:' /search:搜索结果为空！'
+                        status: statusList.fail,
+                        msg: ' /search:搜索结果为空！'
                     }
                 }
             }
@@ -796,6 +796,131 @@ const search = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/search:用户的搜索词为空!'
     }
 }
+
+interface OrderListReturnDatas{
+    orderId:string;
+    nameInput:string;
+    newAndOldDegree:string;
+    topPicSrc:string;
+    typeOne:string;
+    typeTwo:string;
+    typeThree:string;
+    goodsNumber:string;
+}
+
+const orderList = async (ctx, next: () => Promise<any>) => {
+    const { code, orderStatus, orderInfo,page } = ctx.request.query
+    const startIndex = (page - 1) * 7
+    let orderListReturnDatas:OrderListReturnDatas[] = []
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            if (orderInfo == 'released' || orderInfo == 'trading'||orderInfo=='saled') {
+                const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE open_id = ? AND order_status = ? LIMIT ?,7 `
+                const poolResult1 = await transformPoolQuery(sql1, [openid, orderStatus,startIndex])
+                if (poolResult1.length > 0) {
+                    await new Promise((resolve, reject) => {
+                        poolResult1.map(async (data) => {
+                            let topPicSrc
+                            const len = data.pics_location.length
+                            if (len === 0) {
+                                topPicSrc = ''
+                            } else {
+                                topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                            }
+                            orderListReturnDatas.push({
+                                orderId: data.order_id,
+                                nameInput: data.name_input,
+                                newAndOldDegree: data.new_and_old_degree,
+                                topPicSrc: topPicSrc,
+                                typeOne:data.type_one,
+                                typeTwo:data.type_two,
+                                typeThree:data.type_Three,
+                                goodsNumber:data.goodsNumber
+                            })
+                            if (orderListReturnDatas.length === poolResult1.length) {
+                                resolve()
+                            }
+                        })
+                    }).then(() => {
+                        console.log("/orderlist:获取orderlist成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
+                            returnDatas: orderListReturnDatas,
+                            orderStatus:orderStatus,
+                            orderInfo:orderInfo
+                        }
+                    })
+                } else {
+                    console.log('/orderlist:该用户此状态下无订单！')
+                    ctx.response.status = statusCodeList.success
+                    ctx.response.body = {
+                        status: 'success',
+                        returnDatas: orderListReturnDatas,
+                        orderStatus:orderStatus,
+                        orderInfo:orderInfo
+                    }
+                }
+            }
+
+            if(orderInfo == 'bougth'){
+                const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE buy_open_id = ? AND order_status = ?`
+                const poolResult1 = await transformPoolQuery(sql1, [openid, orderStatus])
+                if (poolResult1.length > 0) {
+                    await new Promise((resolve, reject) => {
+                        poolResult1.map(async (data) => {
+                            let topPicSrc
+                            const len = data.pics_location.length
+                            if (len === 0) {
+                                topPicSrc = ''
+                            } else {
+                                topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                            }
+                            orderListReturnDatas.push({
+                                orderId: data.order_id,
+                                nameInput: data.name_input,
+                                newAndOldDegree: data.new_and_old_degree,
+                                topPicSrc: topPicSrc,
+                                typeOne:data.type_one,
+                                typeTwo:data.type_two,
+                                typeThree:data.type_Three,
+                                goodsNumber:data.goodsNumber
+                            })
+                            if (orderListReturnDatas.length === poolResult1.length) {
+                                resolve()
+                            }
+                        })
+                    }).then(() => {
+                        console.log("/orderlist:获取orderlist成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
+                            returnDatas: orderListReturnDatas
+                        }
+                    })
+                } else {
+                    console.log('/orderlist:该用户此状态下无订单！')
+                    ctx.response.status = statusCodeList.success
+                    ctx.response.body = {
+                        status: 'success',
+                        returnDatas: orderListReturnDatas
+                    }
+                }
+            }
+
+        } catch (err) {
+            console.log('/orderlist:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/orderlist:数据库操作失败！'
+        }
+    } else {
+        console.log('/orderlist:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/orderlist:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -808,4 +933,5 @@ app.use(route.get('/getwaterfall', getWaterFall))
 app.use(route.post('/pay', pay))
 app.use(route.get('/trading', trading))
 app.use(route.get('/search', search))
+app.use(route.get('/orderlist', orderList))
 // app.listen(3000)
