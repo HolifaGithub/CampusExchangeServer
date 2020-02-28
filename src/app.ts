@@ -84,8 +84,8 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                         }
                     }
                     if (!isNewUser && isDeleteSuccess) {
-                        const sql5 = `UPDATE  user_info SET open_id=?,nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=?;`
-                        const result5 = await transformPoolQuery(sql5, [openid, nickName, gender, country, province, city, avatarUrl])
+                        const sql5 = `UPDATE  user_info SET nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=? WHERE open_id = ?;`
+                        const result5 = await transformPoolQuery(sql5, [nickName, gender, country, province, city, avatarUrl,openid])
                         if (result5.affectedRows === 1) {
                             console.log(`/login:用户：${nickName}的登录开放数据已保存到数据库！`)
                             ctx.response.status = statusCodeList.success

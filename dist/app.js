@@ -170,9 +170,9 @@ function () {
               break;
             }
 
-            sql5 = "UPDATE  user_info SET open_id=?,nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=?;";
+            sql5 = "UPDATE  user_info SET nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=? WHERE open_id = ?;";
             _context.next = 42;
-            return (0, _transformPoolQuery["default"])(sql5, [openid, nickName, gender, country, province, city, avatarUrl]);
+            return (0, _transformPoolQuery["default"])(sql5, [nickName, gender, country, province, city, avatarUrl, openid]);
 
           case 42:
             result5 = _context.sent;
@@ -966,7 +966,7 @@ function () {
             result = _context10.sent;
             openid = result.openid;
             _context10.prev = 8;
-            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id = ? AND order_status = 'released' LIMIT ?,4;";
+            sql1 = "SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,4;";
             _context10.next = 12;
             return (0, _transformPoolQuery["default"])(sql1, [openid, startIndex]);
 
@@ -1494,7 +1494,7 @@ function () {
             returnDatas = [];
 
             if (!(value.length > 0)) {
-              _context14.next = 57;
+              _context14.next = 56;
               break;
             }
 
@@ -1512,7 +1512,7 @@ function () {
             poolResult1 = _context14.sent;
 
             if (!(poolResult1.length > 0)) {
-              _context14.next = 48;
+              _context14.next = 47;
               break;
             }
 
@@ -1579,7 +1579,7 @@ function () {
             searchResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray);
 
             if (!searchResult) {
-              _context14.next = 45;
+              _context14.next = 44;
               break;
             }
 
@@ -1589,8 +1589,7 @@ function () {
 
           case 39:
             poolResult2 = _context14.sent;
-            console.log('poolResult2:', poolResult2);
-            _context14.next = 43;
+            _context14.next = 42;
             return new Promise(function (resolve, reject) {
               poolResult2.map(
               /*#__PURE__*/
@@ -1660,11 +1659,11 @@ function () {
               };
             });
 
-          case 43:
-            _context14.next = 48;
+          case 42:
+            _context14.next = 47;
             break;
 
-          case 45:
+          case 44:
             console.log('/search:搜索结果为空！');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = {
@@ -1672,32 +1671,32 @@ function () {
               msg: ' /search:搜索结果为空！'
             };
 
-          case 48:
-            _context14.next = 55;
+          case 47:
+            _context14.next = 54;
             break;
 
-          case 50:
-            _context14.prev = 50;
+          case 49:
+            _context14.prev = 49;
             _context14.t1 = _context14["catch"](5);
             console.log('/search:数据库操作失败！', _context14.t1);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:数据库操作失败！';
 
-          case 55:
-            _context14.next = 60;
+          case 54:
+            _context14.next = 59;
             break;
 
-          case 57:
+          case 56:
             console.log('/search:用户的搜索词为空!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:用户的搜索词为空!';
 
-          case 60:
+          case 59:
           case "end":
             return _context14.stop();
         }
       }
-    }, _callee14, null, [[5, 50], [18, 22, 26, 34], [27,, 29, 33]]);
+    }, _callee14, null, [[5, 49], [18, 22, 26, 34], [27,, 29, 33]]);
   }));
 
   return function search(_x24, _x25) {
