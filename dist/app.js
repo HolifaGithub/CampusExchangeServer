@@ -2030,6 +2030,79 @@ function () {
   };
 }();
 
+var recharge =
+/*#__PURE__*/
+function () {
+  var _ref19 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee19(ctx, next) {
+    var _ctx$request$body2, code, value, result, openid, sql1, poolResult1;
+
+    return _regenerator["default"].wrap(function _callee19$(_context19) {
+      while (1) {
+        switch (_context19.prev = _context19.next) {
+          case 0:
+            _ctx$request$body2 = ctx.request.body, code = _ctx$request$body2.code, value = _ctx$request$body2.value;
+
+            if (!code) {
+              _context19.next = 21;
+              break;
+            }
+
+            _context19.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context19.sent;
+            openid = result.openid;
+            _context19.prev = 6;
+            sql1 = "UPDATE user_money SET balance = balance + ? WHERE open_id =? ";
+            _context19.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [value, openid]);
+
+          case 10:
+            poolResult1 = _context19.sent;
+
+            if (poolResult1.affectedRows === 1) {
+              console.log("/recharge:充值成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            }
+
+            _context19.next = 19;
+            break;
+
+          case 14:
+            _context19.prev = 14;
+            _context19.t0 = _context19["catch"](6);
+            console.log('/recharge:数据库操作失败！', _context19.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/recharge:数据库操作失败！';
+
+          case 19:
+            _context19.next = 24;
+            break;
+
+          case 21:
+            console.log('/recharge:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/recharge:您请求的用户code有误!';
+
+          case 24:
+          case "end":
+            return _context19.stop();
+        }
+      }
+    }, _callee19, null, [[6, 14]]);
+  }));
+
+  return function recharge(_x32, _x33) {
+    return _ref19.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -2042,4 +2115,5 @@ app.use(_koaRoute["default"].get('/getwaterfall', getWaterFall));
 app.use(_koaRoute["default"].post('/pay', pay));
 app.use(_koaRoute["default"].get('/trading', trading));
 app.use(_koaRoute["default"].get('/search', search));
-app.use(_koaRoute["default"].get('/orderlist', orderList)); // app.listen(3000)
+app.use(_koaRoute["default"].get('/orderlist', orderList));
+app.use(_koaRoute["default"].post('/recharge', recharge)); // app.listen(3000)

@@ -797,28 +797,28 @@ const search = async (ctx, next: () => Promise<any>) => {
     }
 }
 
-interface OrderListReturnDatas{
-    orderId:string;
-    nameInput:string;
-    newAndOldDegree:string;
-    topPicSrc:string;
-    typeOne:string;
-    typeTwo:string;
-    typeThree:string;
-    goodsNumber:string;
+interface OrderListReturnDatas {
+    orderId: string;
+    nameInput: string;
+    newAndOldDegree: string;
+    topPicSrc: string;
+    typeOne: string;
+    typeTwo: string;
+    typeThree: string;
+    goodsNumber: string;
 }
 
 const orderList = async (ctx, next: () => Promise<any>) => {
-    const { code, orderStatus, orderInfo,page } = ctx.request.query
+    const { code, orderStatus, orderInfo, page } = ctx.request.query
     const startIndex = (page - 1) * 7
-    let orderListReturnDatas:OrderListReturnDatas[] = []
+    let orderListReturnDatas: OrderListReturnDatas[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            if (orderInfo == 'released' ||orderInfo=='saled') {
+            if (orderInfo == 'released' || orderInfo == 'saled') {
                 const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE open_id = ? AND order_status = ? LIMIT ?,7 `
-                const poolResult1 = await transformPoolQuery(sql1, [openid, orderStatus,startIndex])
+                const poolResult1 = await transformPoolQuery(sql1, [openid, orderStatus, startIndex])
                 if (poolResult1.length > 0) {
                     await new Promise((resolve, reject) => {
                         poolResult1.map(async (data) => {
@@ -834,10 +834,10 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                                 nameInput: data.name_input,
                                 newAndOldDegree: data.new_and_old_degree,
                                 topPicSrc: topPicSrc,
-                                typeOne:data.type_one,
-                                typeTwo:data.type_two,
-                                typeThree:data.type_Three,
-                                goodsNumber:data.goodsNumber
+                                typeOne: data.type_one,
+                                typeTwo: data.type_two,
+                                typeThree: data.type_Three,
+                                goodsNumber: data.goodsNumber
                             })
                             if (orderListReturnDatas.length === poolResult1.length) {
                                 resolve()
@@ -849,8 +849,8 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                         ctx.response.body = {
                             status: statusList.success,
                             returnDatas: orderListReturnDatas,
-                            orderStatus:orderStatus,
-                            orderInfo:orderInfo
+                            orderStatus: orderStatus,
+                            orderInfo: orderInfo
                         }
                     })
                 } else {
@@ -859,14 +859,14 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                     ctx.response.body = {
                         status: 'success',
                         returnDatas: orderListReturnDatas,
-                        orderStatus:orderStatus,
-                        orderInfo:orderInfo
+                        orderStatus: orderStatus,
+                        orderInfo: orderInfo
                     }
                 }
             }
-            if(orderInfo == 'trading'){
+            if (orderInfo == 'trading') {
                 const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE (buy_open_id = ? OR open_id = ?)AND order_status = ?`
-                const poolResult1 = await transformPoolQuery(sql1, [openid,openid, orderStatus])
+                const poolResult1 = await transformPoolQuery(sql1, [openid, openid, orderStatus])
                 if (poolResult1.length > 0) {
                     await new Promise((resolve, reject) => {
                         poolResult1.map(async (data) => {
@@ -882,10 +882,10 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                                 nameInput: data.name_input,
                                 newAndOldDegree: data.new_and_old_degree,
                                 topPicSrc: topPicSrc,
-                                typeOne:data.type_one,
-                                typeTwo:data.type_two,
-                                typeThree:data.type_Three,
-                                goodsNumber:data.goodsNumber
+                                typeOne: data.type_one,
+                                typeTwo: data.type_two,
+                                typeThree: data.type_Three,
+                                goodsNumber: data.goodsNumber
                             })
                             if (orderListReturnDatas.length === poolResult1.length) {
                                 resolve()
@@ -909,7 +909,7 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                 }
             }
 
-            if(orderInfo == 'bougth'){
+            if (orderInfo == 'bougth') {
                 const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE buy_open_id = ? AND order_status = ?`
                 const poolResult1 = await transformPoolQuery(sql1, [openid, orderStatus])
                 if (poolResult1.length > 0) {
@@ -927,10 +927,10 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                                 nameInput: data.name_input,
                                 newAndOldDegree: data.new_and_old_degree,
                                 topPicSrc: topPicSrc,
-                                typeOne:data.type_one,
-                                typeTwo:data.type_two,
-                                typeThree:data.type_Three,
-                                goodsNumber:data.goodsNumber
+                                typeOne: data.type_one,
+                                typeTwo: data.type_two,
+                                typeThree: data.type_Three,
+                                goodsNumber: data.goodsNumber
                             })
                             if (orderListReturnDatas.length === poolResult1.length) {
                                 resolve()
@@ -965,6 +965,34 @@ const orderList = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/orderlist:您请求的用户code有误!'
     }
 }
+
+const recharge = async (ctx, next: () => Promise<any>) => {
+    const { code, value } = ctx.request.body
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1=`UPDATE user_money SET balance = balance + ? WHERE open_id =? `
+            const poolResult1 = await transformPoolQuery(sql1, [value, openid])
+            if (poolResult1.affectedRows === 1) {
+                console.log("/recharge:充值成功！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success
+                }
+            }
+        } catch (err) {
+            console.log('/recharge:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/recharge:数据库操作失败！'
+        }
+    }else{
+        console.log('/recharge:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/recharge:您请求的用户code有误!'
+    }
+}
+
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -978,4 +1006,5 @@ app.use(route.post('/pay', pay))
 app.use(route.get('/trading', trading))
 app.use(route.get('/search', search))
 app.use(route.get('/orderlist', orderList))
+app.use(route.post('/recharge', recharge))
 // app.listen(3000)
