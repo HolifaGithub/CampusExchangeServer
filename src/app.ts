@@ -816,7 +816,7 @@ const orderList = async (ctx, next: () => Promise<any>) => {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            if (orderInfo == 'released' || orderInfo == 'trading'||orderInfo=='saled') {
+            if (orderInfo == 'released' ||orderInfo=='saled') {
                 const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE open_id = ? AND order_status = ? LIMIT ?,7 `
                 const poolResult1 = await transformPoolQuery(sql1, [openid, orderStatus,startIndex])
                 if (poolResult1.length > 0) {
@@ -861,6 +861,50 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                         returnDatas: orderListReturnDatas,
                         orderStatus:orderStatus,
                         orderInfo:orderInfo
+                    }
+                }
+            }
+            if(orderInfo == 'trading'){
+                const sql1 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE (buy_open_id = ? OR open_id = ?)AND order_status = ?`
+                const poolResult1 = await transformPoolQuery(sql1, [openid,openid, orderStatus])
+                if (poolResult1.length > 0) {
+                    await new Promise((resolve, reject) => {
+                        poolResult1.map(async (data) => {
+                            let topPicSrc
+                            const len = data.pics_location.length
+                            if (len === 0) {
+                                topPicSrc = ''
+                            } else {
+                                topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                            }
+                            orderListReturnDatas.push({
+                                orderId: data.order_id,
+                                nameInput: data.name_input,
+                                newAndOldDegree: data.new_and_old_degree,
+                                topPicSrc: topPicSrc,
+                                typeOne:data.type_one,
+                                typeTwo:data.type_two,
+                                typeThree:data.type_Three,
+                                goodsNumber:data.goodsNumber
+                            })
+                            if (orderListReturnDatas.length === poolResult1.length) {
+                                resolve()
+                            }
+                        })
+                    }).then(() => {
+                        console.log("/orderlist:获取orderlist成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
+                            returnDatas: orderListReturnDatas
+                        }
+                    })
+                } else {
+                    console.log('/orderlist:该用户此状态下无订单！')
+                    ctx.response.status = statusCodeList.success
+                    ctx.response.body = {
+                        status: 'success',
+                        returnDatas: orderListReturnDatas
                     }
                 }
             }
