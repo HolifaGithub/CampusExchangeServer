@@ -1778,8 +1778,8 @@ function () {
                             topPicSrc: topPicSrc,
                             typeOne: data.type_one,
                             typeTwo: data.type_two,
-                            typeThree: data.type_Three,
-                            goodsNumber: data.goodsNumber
+                            typeThree: data.type_three,
+                            goodsNumber: data.goods_number
                           });
 
                           if (orderListReturnDatas.length === poolResult1.length) {
@@ -1869,8 +1869,8 @@ function () {
                             topPicSrc: topPicSrc,
                             typeOne: data.type_one,
                             typeTwo: data.type_two,
-                            typeThree: data.type_Three,
-                            goodsNumber: data.goodsNumber
+                            typeThree: data.type_three,
+                            goodsNumber: data.goods_number
                           });
 
                           if (orderListReturnDatas.length === _poolResult9.length) {
@@ -1956,8 +1956,8 @@ function () {
                             topPicSrc: topPicSrc,
                             typeOne: data.type_one,
                             typeTwo: data.type_two,
-                            typeThree: data.type_Three,
-                            goodsNumber: data.goodsNumber
+                            typeThree: data.type_three,
+                            goodsNumber: data.goods_number
                           });
 
                           if (orderListReturnDatas.length === _poolResult10.length) {

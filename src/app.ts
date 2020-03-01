@@ -836,8 +836,8 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                                 topPicSrc: topPicSrc,
                                 typeOne: data.type_one,
                                 typeTwo: data.type_two,
-                                typeThree: data.type_Three,
-                                goodsNumber: data.goodsNumber
+                                typeThree: data.type_three,
+                                goodsNumber: data.goods_number
                             })
                             if (orderListReturnDatas.length === poolResult1.length) {
                                 resolve()
@@ -884,8 +884,8 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                                 topPicSrc: topPicSrc,
                                 typeOne: data.type_one,
                                 typeTwo: data.type_two,
-                                typeThree: data.type_Three,
-                                goodsNumber: data.goodsNumber
+                                typeThree: data.type_three,
+                                goodsNumber: data.goods_number
                             })
                             if (orderListReturnDatas.length === poolResult1.length) {
                                 resolve()
@@ -929,8 +929,8 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                                 topPicSrc: topPicSrc,
                                 typeOne: data.type_one,
                                 typeTwo: data.type_two,
-                                typeThree: data.type_Three,
-                                goodsNumber: data.goodsNumber
+                                typeThree: data.type_three,
+                                goodsNumber: data.goods_number
                             })
                             if (orderListReturnDatas.length === poolResult1.length) {
                                 resolve()
