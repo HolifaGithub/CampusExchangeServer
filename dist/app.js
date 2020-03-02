@@ -512,7 +512,7 @@ function () {
   var _ref5 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee5(ctx, next) {
-    var _ctx$request$query, code, orderId, sql1, poolResult1, salerOpenId, sql2, poolResult2, _poolResult2$, nick_name, avatar_url, school, sql3, poolResult3, _poolResult3$, order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location, result, openid, _sql, _poolResult, _poolResult$, _nick_name, _avatar_url, _school, _sql2, _poolResult2, _poolResult2$2, _order_id, _order_time, _order_status, _type_one, _type_two, _type_three, _name_input, _goods_number, _new_and_old_degree, _mode, _object_of_payment, _pay_for_me_price, _pay_for_other_price, _want_exchange_goods, _goods_describe, _pics_location;
+    var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, salerOpenId, sql2, poolResult2, _poolResult2$, nick_name, avatar_url, school, sql3, poolResult3, _poolResult3$, order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location, sql4, poolResult4, isCare, _result, _openid, _sql, _poolResult, _poolResult$, _nick_name, _avatar_url, _school, _sql2, _poolResult2, _poolResult2$2, _order_id, _order_time, _order_status, _type_one, _type_two, _type_three, _name_input, _goods_number, _new_and_old_degree, _mode, _object_of_payment, _pay_for_me_price, _pay_for_other_price, _want_exchange_goods, _goods_describe, _pics_location;
 
     return _regenerator["default"].wrap(function _callee5$(_context5) {
       while (1) {
@@ -521,118 +521,140 @@ function () {
             _ctx$request$query = ctx.request.query, code = _ctx$request$query.code, orderId = _ctx$request$query.orderId;
 
             if (!(code && orderId.length > 0)) {
-              _context5.next = 29;
+              _context5.next = 43;
               break;
             }
 
-            _context5.prev = 2;
+            _context5.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context5.sent;
+            openid = result.openid;
+            _context5.prev = 6;
             sql1 = "SELECT open_id FROM goods WHERE order_id = ?";
-            _context5.next = 6;
+            _context5.next = 10;
             return (0, _transformPoolQuery["default"])(sql1, [orderId]);
 
-          case 6:
+          case 10:
             poolResult1 = _context5.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context5.next = 20;
+              _context5.next = 34;
               break;
             }
 
             salerOpenId = poolResult1[0].open_id;
             sql2 = "SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;";
-            _context5.next = 12;
+            _context5.next = 16;
             return (0, _transformPoolQuery["default"])(sql2, [salerOpenId]);
 
-          case 12:
+          case 16:
             poolResult2 = _context5.sent;
 
             if (!(poolResult2.length === 1)) {
-              _context5.next = 20;
+              _context5.next = 34;
               break;
             }
 
             _poolResult2$ = poolResult2[0], nick_name = _poolResult2$.nick_name, avatar_url = _poolResult2$.avatar_url, school = _poolResult2$.school;
             sql3 = "SELECT * FROM goods WHERE order_id =?";
-            _context5.next = 18;
+            _context5.next = 22;
             return (0, _transformPoolQuery["default"])(sql3, [orderId]);
 
-          case 18:
+          case 22:
             poolResult3 = _context5.sent;
 
-            if (poolResult3.length === 1) {
-              _poolResult3$ = poolResult3[0], order_id = _poolResult3$.order_id, order_time = _poolResult3$.order_time, order_status = _poolResult3$.order_status, type_one = _poolResult3$.type_one, type_two = _poolResult3$.type_two, type_three = _poolResult3$.type_three, name_input = _poolResult3$.name_input, goods_number = _poolResult3$.goods_number, new_and_old_degree = _poolResult3$.new_and_old_degree, mode = _poolResult3$.mode, object_of_payment = _poolResult3$.object_of_payment, pay_for_me_price = _poolResult3$.pay_for_me_price, pay_for_other_price = _poolResult3$.pay_for_other_price, want_exchange_goods = _poolResult3$.want_exchange_goods, goods_describe = _poolResult3$.goods_describe, pics_location = _poolResult3$.pics_location;
-              console.log('/getgoodsinfo:获取商品详情成功！');
-              ctx.response.body = {
-                status: _userStatus.statusList.success,
-                orderId: order_id,
-                orderTime: order_time,
-                orderStatus: order_status,
-                typeOne: type_one,
-                typeTwo: type_two,
-                typeThree: type_three,
-                nameInput: name_input,
-                goodsNumber: goods_number,
-                newAndOldDegree: new_and_old_degree,
-                mode: mode,
-                objectOfPayment: object_of_payment,
-                payForMePrice: pay_for_me_price,
-                payForOtherPrice: pay_for_other_price,
-                wantExchangeGoods: want_exchange_goods,
-                describe: goods_describe,
-                picsLocation: pics_location,
-                nickName: nick_name,
-                avatarUrl: avatar_url,
-                school: school
-              };
-              ctx.response.statusCode = _userStatus.statusCodeList.success;
+            if (!(poolResult3.length === 1)) {
+              _context5.next = 34;
+              break;
             }
 
-          case 20:
-            _context5.next = 27;
+            _poolResult3$ = poolResult3[0], order_id = _poolResult3$.order_id, order_time = _poolResult3$.order_time, order_status = _poolResult3$.order_status, type_one = _poolResult3$.type_one, type_two = _poolResult3$.type_two, type_three = _poolResult3$.type_three, name_input = _poolResult3$.name_input, goods_number = _poolResult3$.goods_number, new_and_old_degree = _poolResult3$.new_and_old_degree, mode = _poolResult3$.mode, object_of_payment = _poolResult3$.object_of_payment, pay_for_me_price = _poolResult3$.pay_for_me_price, pay_for_other_price = _poolResult3$.pay_for_other_price, want_exchange_goods = _poolResult3$.want_exchange_goods, goods_describe = _poolResult3$.goods_describe, pics_location = _poolResult3$.pics_location;
+            sql4 = "SELECT * FROM user_care WHERE open_id = ? AND concerned_order_id = ?";
+            _context5.next = 28;
+            return (0, _transformPoolQuery["default"])(sql4, [openid, orderId]);
+
+          case 28:
+            poolResult4 = _context5.sent;
+            isCare = false;
+
+            if (poolResult4.length === 1) {
+              isCare = true;
+            }
+
+            console.log('/getgoodsinfo:获取商品详情成功！');
+            ctx.response.body = {
+              status: _userStatus.statusList.success,
+              orderId: order_id,
+              orderTime: order_time,
+              orderStatus: order_status,
+              typeOne: type_one,
+              typeTwo: type_two,
+              typeThree: type_three,
+              nameInput: name_input,
+              goodsNumber: goods_number,
+              newAndOldDegree: new_and_old_degree,
+              mode: mode,
+              objectOfPayment: object_of_payment,
+              payForMePrice: pay_for_me_price,
+              payForOtherPrice: pay_for_other_price,
+              wantExchangeGoods: want_exchange_goods,
+              describe: goods_describe,
+              picsLocation: pics_location,
+              nickName: nick_name,
+              avatarUrl: avatar_url,
+              school: school,
+              isCare: isCare
+            };
+            ctx.response.statusCode = _userStatus.statusCodeList.success;
+
+          case 34:
+            _context5.next = 41;
             break;
 
-          case 22:
-            _context5.prev = 22;
-            _context5.t0 = _context5["catch"](2);
+          case 36:
+            _context5.prev = 36;
+            _context5.t0 = _context5["catch"](6);
             console.log('/getgoodsinfo:数据库操作失败！', _context5.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getgoodsinfo:数据库操作失败！';
 
-          case 27:
-            _context5.next = 58;
+          case 41:
+            _context5.next = 72;
             break;
 
-          case 29:
+          case 43:
             if (!(code && orderId.length === 0)) {
-              _context5.next = 55;
+              _context5.next = 69;
               break;
             }
 
-            _context5.next = 32;
+            _context5.next = 46;
             return (0, _getOpenIdAndSessionKey["default"])(code);
 
-          case 32:
-            result = _context5.sent;
-            openid = result.openid;
-            _context5.prev = 34;
+          case 46:
+            _result = _context5.sent;
+            _openid = _result.openid;
+            _context5.prev = 48;
             _sql = "SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;";
-            _context5.next = 38;
-            return (0, _transformPoolQuery["default"])(_sql, [openid]);
+            _context5.next = 52;
+            return (0, _transformPoolQuery["default"])(_sql, [_openid]);
 
-          case 38:
+          case 52:
             _poolResult = _context5.sent;
 
             if (!(_poolResult.length === 1)) {
-              _context5.next = 46;
+              _context5.next = 60;
               break;
             }
 
             _poolResult$ = _poolResult[0], _nick_name = _poolResult$.nick_name, _avatar_url = _poolResult$.avatar_url, _school = _poolResult$.school;
             _sql2 = "SELECT * FROM goods WHERE order_id =?";
-            _context5.next = 44;
+            _context5.next = 58;
             return (0, _transformPoolQuery["default"])(_sql2, [orderId]);
 
-          case 44:
+          case 58:
             _poolResult2 = _context5.sent;
 
             if (_poolResult2.length === 1) {
@@ -663,32 +685,32 @@ function () {
               ctx.response.statusCode = _userStatus.statusCodeList.success;
             }
 
-          case 46:
-            _context5.next = 53;
+          case 60:
+            _context5.next = 67;
             break;
 
-          case 48:
-            _context5.prev = 48;
-            _context5.t1 = _context5["catch"](34);
+          case 62:
+            _context5.prev = 62;
+            _context5.t1 = _context5["catch"](48);
             console.log('/getgoodsinfo:数据库操作失败！', _context5.t1);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getgoodsinfo:数据库操作失败！';
 
-          case 53:
-            _context5.next = 58;
+          case 67:
+            _context5.next = 72;
             break;
 
-          case 55:
+          case 69:
             console.log('/getgoodsinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getgoodsinfo:您请求的用户code有误!';
 
-          case 58:
+          case 72:
           case "end":
             return _context5.stop();
         }
       }
-    }, _callee5, null, [[2, 22], [34, 48]]);
+    }, _callee5, null, [[6, 36], [48, 62]]);
   }));
 
   return function getGoodsInfo(_x9, _x10) {
@@ -2103,6 +2125,265 @@ function () {
   };
 }();
 
+var care =
+/*#__PURE__*/
+function () {
+  var _ref20 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee20(ctx, next) {
+    var _ctx$request$body3, code, orderId, result, openid, sql1, poolResult1, sql2, poolResult2, sql3, poolResult3, concernedOpenId, sql4, poolResult4;
+
+    return _regenerator["default"].wrap(function _callee20$(_context20) {
+      while (1) {
+        switch (_context20.prev = _context20.next) {
+          case 0:
+            _ctx$request$body3 = ctx.request.body, code = _ctx$request$body3.code, orderId = _ctx$request$body3.orderId;
+
+            if (!code) {
+              _context20.next = 39;
+              break;
+            }
+
+            _context20.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context20.sent;
+            openid = result.openid;
+            _context20.prev = 6;
+            sql1 = "SELECT * FROM user_care WHERE open_id = ? AND concerned_order_id = ?";
+            _context20.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid, orderId]);
+
+          case 10:
+            poolResult1 = _context20.sent;
+
+            if (!(poolResult1.length === 1)) {
+              _context20.next = 19;
+              break;
+            }
+
+            sql2 = "DELETE FROM user_care WHERE open_id = ? AND concerned_order_id = ?";
+            _context20.next = 15;
+            return (0, _transformPoolQuery["default"])(sql2, [openid, orderId]);
+
+          case 15:
+            poolResult2 = _context20.sent;
+
+            if (poolResult2.affectedRows === 1) {
+              console.log("/care:取消关注成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            }
+
+            _context20.next = 30;
+            break;
+
+          case 19:
+            sql3 = "SELECT open_id FROM goods WHERE order_id = ?";
+            _context20.next = 22;
+            return (0, _transformPoolQuery["default"])(sql3, [orderId]);
+
+          case 22:
+            poolResult3 = _context20.sent;
+
+            if (!(poolResult3.length === 1)) {
+              _context20.next = 30;
+              break;
+            }
+
+            concernedOpenId = poolResult3[0].open_id;
+            sql4 = "INSERT INTO user_care(open_id,concerned_open_id,concerned_order_id) VALUES (?,?,?)";
+            _context20.next = 28;
+            return (0, _transformPoolQuery["default"])(sql4, [openid, concernedOpenId, orderId]);
+
+          case 28:
+            poolResult4 = _context20.sent;
+
+            if (poolResult4.affectedRows === 1) {
+              console.log("/care:关注成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            }
+
+          case 30:
+            _context20.next = 37;
+            break;
+
+          case 32:
+            _context20.prev = 32;
+            _context20.t0 = _context20["catch"](6);
+            console.log('/care:数据库操作失败！', _context20.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/care:数据库操作失败！';
+
+          case 37:
+            _context20.next = 42;
+            break;
+
+          case 39:
+            console.log('/care:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/care:您请求的用户code有误!';
+
+          case 42:
+          case "end":
+            return _context20.stop();
+        }
+      }
+    }, _callee20, null, [[6, 32]]);
+  }));
+
+  return function care(_x34, _x35) {
+    return _ref20.apply(this, arguments);
+  };
+}();
+
+var getCareList =
+/*#__PURE__*/
+function () {
+  var _ref21 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee22(ctx, next) {
+    var _ctx$request$query6, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
+
+    return _regenerator["default"].wrap(function _callee22$(_context22) {
+      while (1) {
+        switch (_context22.prev = _context22.next) {
+          case 0:
+            _ctx$request$query6 = ctx.request.query, code = _ctx$request$query6.code, page = _ctx$request$query6.page;
+            startIndex = (page - 1) * 8;
+            returnDatas = [];
+
+            if (!code) {
+              _context22.next = 30;
+              break;
+            }
+
+            _context22.next = 6;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 6:
+            result = _context22.sent;
+            openid = result.openid;
+            _context22.prev = 8;
+            sql1 = "SELECT concerned_open_id,concerned_order_id FROM user_care WHERE open_id = ?";
+            _context22.next = 12;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 12:
+            poolResult1 = _context22.sent;
+
+            if (!(poolResult1.length > 0)) {
+              _context22.next = 18;
+              break;
+            }
+
+            _context22.next = 16;
+            return new Promise(function (resolve, reject) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref22 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee21(data, index) {
+                  var concernedOpenId, concernedOrderId, sql2, poolResult2;
+                  return _regenerator["default"].wrap(function _callee21$(_context21) {
+                    while (1) {
+                      switch (_context21.prev = _context21.next) {
+                        case 0:
+                          concernedOpenId = data.concerned_open_id;
+                          concernedOrderId = data.concerned_order_id;
+                          sql2 = "SELECT avatar_url,nick_name,collage,user_class FROM user_info WHERE open_id = ? LIMIT ?,8";
+                          _context21.next = 5;
+                          return (0, _transformPoolQuery["default"])(sql2, [concernedOpenId, startIndex]);
+
+                        case 5:
+                          poolResult2 = _context21.sent;
+
+                          if (poolResult2.length === 1) {
+                            returnDatas.push({
+                              nickName: poolResult2[0].nick_name,
+                              avatarUrl: poolResult2[0].avatar_url,
+                              collage: poolResult2[0].collage,
+                              userClass: poolResult2[0].user_class,
+                              concernedOrderId: concernedOrderId
+                            });
+                          }
+
+                          if (returnDatas.length === poolResult1.length) {
+                            resolve();
+                          }
+
+                        case 8:
+                        case "end":
+                          return _context21.stop();
+                      }
+                    }
+                  }, _callee21);
+                }));
+
+                return function (_x38, _x39) {
+                  return _ref22.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/getCareList:查询关注列表成功，但无数据！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            });
+
+          case 16:
+            _context22.next = 21;
+            break;
+
+          case 18:
+            console.log("/getCareList:查询关注列表成功，但无数据！");
+            ctx.response.statusCode = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: _userStatus.statusList.success
+            };
+
+          case 21:
+            _context22.next = 28;
+            break;
+
+          case 23:
+            _context22.prev = 23;
+            _context22.t0 = _context22["catch"](8);
+            console.log('/getCareList:数据库操作失败！', _context22.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getCareList:数据库操作失败！';
+
+          case 28:
+            _context22.next = 33;
+            break;
+
+          case 30:
+            console.log('/getCareList:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getCareList:您请求的用户code有误!';
+
+          case 33:
+          case "end":
+            return _context22.stop();
+        }
+      }
+    }, _callee22, null, [[8, 23]]);
+  }));
+
+  return function getCareList(_x36, _x37) {
+    return _ref21.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -2116,4 +2397,6 @@ app.use(_koaRoute["default"].post('/pay', pay));
 app.use(_koaRoute["default"].get('/trading', trading));
 app.use(_koaRoute["default"].get('/search', search));
 app.use(_koaRoute["default"].get('/orderlist', orderList));
-app.use(_koaRoute["default"].post('/recharge', recharge)); // app.listen(3000)
+app.use(_koaRoute["default"].post('/recharge', recharge));
+app.use(_koaRoute["default"].post('/care', care));
+app.use(_koaRoute["default"].get('/getcarelist', getCareList)); // app.listen(3000)

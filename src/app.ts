@@ -248,6 +248,8 @@ const releasegoodspics = async (ctx, next: () => Promise<any>) => {
 const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
     const { code, orderId } = ctx.request.query
     if (code && orderId.length > 0) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
         try {
             const sql1 = `SELECT open_id FROM goods WHERE order_id = ?`
             const poolResult1 = await transformPoolQuery(sql1, [orderId])
@@ -261,6 +263,12 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                     const poolResult3 = await transformPoolQuery(sql3, [orderId])
                     if (poolResult3.length === 1) {
                         const { order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location } = poolResult3[0]
+                        const sql4 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_order_id = ?`
+                        const poolResult4 = await transformPoolQuery(sql4, [openid, orderId])
+                        let isCare = false
+                        if (poolResult4.length === 1) {
+                            isCare = true
+                        }
                         console.log('/getgoodsinfo:获取商品详情成功！')
                         ctx.response.body = {
                             status: statusList.success,
@@ -282,7 +290,8 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                             picsLocation: pics_location,
                             nickName: nick_name,
                             avatarUrl: avatar_url,
-                            school: school
+                            school: school,
+                            isCare: isCare
                         }
                         ctx.response.statusCode = statusCodeList.success
                     }
@@ -972,7 +981,7 @@ const recharge = async (ctx, next: () => Promise<any>) => {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1=`UPDATE user_money SET balance = balance + ? WHERE open_id =? `
+            const sql1 = `UPDATE user_money SET balance = balance + ? WHERE open_id =? `
             const poolResult1 = await transformPoolQuery(sql1, [value, openid])
             if (poolResult1.affectedRows === 1) {
                 console.log("/recharge:充值成功！")
@@ -986,13 +995,122 @@ const recharge = async (ctx, next: () => Promise<any>) => {
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/recharge:数据库操作失败！'
         }
-    }else{
+    } else {
         console.log('/recharge:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/recharge:您请求的用户code有误!'
     }
 }
 
+const care = async (ctx, next: () => Promise<any>) => {
+    const { code, orderId } = ctx.request.body
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid, orderId])
+            if (poolResult1.length === 1) {
+                const sql2 = `DELETE FROM user_care WHERE open_id = ? AND concerned_order_id = ?`
+                const poolResult2 = await transformPoolQuery(sql2, [openid, orderId])
+                if (poolResult2.affectedRows === 1) {
+                    console.log("/care:取消关注成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success
+                    }
+                }
+            } else {
+                const sql3 = `SELECT open_id FROM goods WHERE order_id = ?`
+                const poolResult3 = await transformPoolQuery(sql3, [orderId])
+                if (poolResult3.length === 1) {
+                    const concernedOpenId = poolResult3[0].open_id
+                    const sql4 = `INSERT INTO user_care(open_id,concerned_open_id,concerned_order_id) VALUES (?,?,?)`
+                    const poolResult4 = await transformPoolQuery(sql4, [openid, concernedOpenId, orderId])
+                    if (poolResult4.affectedRows === 1) {
+                        console.log("/care:关注成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('/care:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/care:数据库操作失败！'
+        }
+    } else {
+        console.log('/care:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/care:您请求的用户code有误!'
+    }
+}
+
+interface GetCareListReturnList{
+    nickName:string;
+    avatarUrl:string;
+    collage:string;
+    userClass:string;
+    concernedOrderId:string;
+}
+const getCareList = async (ctx, next: () => Promise<any>) => {
+    const { code,page } = ctx.request.query
+    const startIndex = (page - 1) * 8
+    let returnDatas:GetCareListReturnList[] = []
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT concerned_open_id,concerned_order_id FROM user_care WHERE open_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length > 0) {
+                await new Promise((resolve, reject) => {
+                    poolResult1.map(async(data, index) => {
+                        const concernedOpenId = data.concerned_open_id
+                        const concernedOrderId = data.concerned_order_id
+                        const sql2 = `SELECT avatar_url,nick_name,collage,user_class FROM user_info WHERE open_id = ? LIMIT ?,8`
+                        const poolResult2 = await transformPoolQuery(sql2, [concernedOpenId,startIndex])
+                        if (poolResult2.length === 1) {
+                            returnDatas.push({
+                                nickName:poolResult2[0].nick_name,
+                                avatarUrl:poolResult2[0].avatar_url,
+                                collage:poolResult2[0].collage,
+                                userClass:poolResult2[0].user_class,
+                                concernedOrderId:concernedOrderId
+                            })
+                        }
+                        if(returnDatas.length===poolResult1.length){
+                            resolve()
+                        }
+                    })
+                }).then(()=>{
+                    console.log("/getCareList:查询关注列表成功，但无数据！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                        returnDatas:returnDatas
+                    }
+                })  
+            } else {
+                console.log("/getCareList:查询关注列表成功，但无数据！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success
+                }
+            }
+        } catch (err) {
+            console.log('/getCareList:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getCareList:数据库操作失败！'
+        }
+    } else {
+        console.log('/getCareList:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getCareList:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -1007,4 +1125,6 @@ app.use(route.get('/trading', trading))
 app.use(route.get('/search', search))
 app.use(route.get('/orderlist', orderList))
 app.use(route.post('/recharge', recharge))
+app.use(route.post('/care', care))
+app.use(route.get('/getcarelist', getCareList))
 // app.listen(3000)

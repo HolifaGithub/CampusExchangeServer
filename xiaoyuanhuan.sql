@@ -63,4 +63,11 @@ CREATE TABLE user_order(
      saled Int(20) DEFAULT 0
 );
 
+DROP TABLE IF EXISTS user_care;
+CREATE TABLE user_care(
+     open_id VARCHAR(30) NOT NULL,
+     concerned_open_id VARCHAR(30) NOT NULL,
+     concerned_order_id VARCHAR(30) NOT NULL
+);
+
 
