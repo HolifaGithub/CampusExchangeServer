@@ -30,7 +30,7 @@ var _miniProgramInfo = require("./static-name/mini-program-info");
 
 var _userStatus = require("./static-name/user-status");
 
-var _http = _interopRequireDefault(require("http"));
+var _https = _interopRequireDefault(require("https"));
 
 // import bodyParse from 'koa-bodyparser'
 var body = require('koa-body');
@@ -44,10 +44,9 @@ var certContent = _fs["default"].readFileSync(_path["default"].join(__dirname, '
 var httpsOption = {
   key: keyContent,
   cert: certContent
-};
+}; // http.createServer(app.callback()).listen(3000)
 
-_http["default"].createServer(app.callback()).listen(3000); // https.createServer(httpsOption, app.callback()).listen(3000)
-
+_https["default"].createServer(httpsOption, app.callback()).listen(3000);
 
 app.use(body({
   multipart: true
@@ -512,7 +511,7 @@ function () {
   var _ref5 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee5(ctx, next) {
-    var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, salerOpenId, sql2, poolResult2, _poolResult2$, nick_name, avatar_url, school, sql3, poolResult3, _poolResult3$, order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location, sql4, poolResult4, isCare, _result, _openid, _sql, _poolResult, _poolResult$, _nick_name, _avatar_url, _school, _sql2, _poolResult2, _poolResult2$2, _order_id, _order_time, _order_status, _type_one, _type_two, _type_three, _name_input, _goods_number, _new_and_old_degree, _mode, _object_of_payment, _pay_for_me_price, _pay_for_other_price, _want_exchange_goods, _goods_describe, _pics_location;
+    var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, salerOpenId, sql2, poolResult2, _poolResult2$, nick_name, avatar_url, school, sql3, poolResult3, _poolResult3$, order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location, sql4, poolResult4, isCare, isCollect, sql5, poolResult5, _result, _openid, _sql, _poolResult, _poolResult$, _nick_name, _avatar_url, _school, _sql2, _poolResult2, _poolResult2$2, _order_id, _order_time, _order_status, _type_one, _type_two, _type_three, _name_input, _goods_number, _new_and_old_degree, _mode, _object_of_payment, _pay_for_me_price, _pay_for_other_price, _want_exchange_goods, _goods_describe, _pics_location;
 
     return _regenerator["default"].wrap(function _callee5$(_context5) {
       while (1) {
@@ -521,7 +520,7 @@ function () {
             _ctx$request$query = ctx.request.query, code = _ctx$request$query.code, orderId = _ctx$request$query.orderId;
 
             if (!(code && orderId.length > 0)) {
-              _context5.next = 43;
+              _context5.next = 49;
               break;
             }
 
@@ -540,7 +539,7 @@ function () {
             poolResult1 = _context5.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context5.next = 34;
+              _context5.next = 40;
               break;
             }
 
@@ -553,7 +552,7 @@ function () {
             poolResult2 = _context5.sent;
 
             if (!(poolResult2.length === 1)) {
-              _context5.next = 34;
+              _context5.next = 40;
               break;
             }
 
@@ -566,7 +565,7 @@ function () {
             poolResult3 = _context5.sent;
 
             if (!(poolResult3.length === 1)) {
-              _context5.next = 34;
+              _context5.next = 40;
               break;
             }
 
@@ -578,9 +577,21 @@ function () {
           case 28:
             poolResult4 = _context5.sent;
             isCare = false;
+            isCollect = false;
 
             if (poolResult4.length === 1) {
               isCare = true;
+            }
+
+            sql5 = "SELECT * FROM user_collect WHERE open_id = ? AND collect_order_id = ?";
+            _context5.next = 35;
+            return (0, _transformPoolQuery["default"])(sql5, [openid, orderId]);
+
+          case 35:
+            poolResult5 = _context5.sent;
+
+            if (poolResult5.length === 1) {
+              isCollect = true;
             }
 
             console.log('/getgoodsinfo:获取商品详情成功！');
@@ -605,56 +616,57 @@ function () {
               nickName: nick_name,
               avatarUrl: avatar_url,
               school: school,
-              isCare: isCare
+              isCare: isCare,
+              isCollect: isCollect
             };
             ctx.response.statusCode = _userStatus.statusCodeList.success;
 
-          case 34:
-            _context5.next = 41;
+          case 40:
+            _context5.next = 47;
             break;
 
-          case 36:
-            _context5.prev = 36;
+          case 42:
+            _context5.prev = 42;
             _context5.t0 = _context5["catch"](6);
             console.log('/getgoodsinfo:数据库操作失败！', _context5.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getgoodsinfo:数据库操作失败！';
 
-          case 41:
-            _context5.next = 72;
+          case 47:
+            _context5.next = 78;
             break;
 
-          case 43:
+          case 49:
             if (!(code && orderId.length === 0)) {
-              _context5.next = 69;
+              _context5.next = 75;
               break;
             }
 
-            _context5.next = 46;
+            _context5.next = 52;
             return (0, _getOpenIdAndSessionKey["default"])(code);
 
-          case 46:
+          case 52:
             _result = _context5.sent;
             _openid = _result.openid;
-            _context5.prev = 48;
+            _context5.prev = 54;
             _sql = "SELECT nick_name,avatar_url,school FROM user_info WHERE open_id = ?;";
-            _context5.next = 52;
+            _context5.next = 58;
             return (0, _transformPoolQuery["default"])(_sql, [_openid]);
 
-          case 52:
+          case 58:
             _poolResult = _context5.sent;
 
             if (!(_poolResult.length === 1)) {
-              _context5.next = 60;
+              _context5.next = 66;
               break;
             }
 
             _poolResult$ = _poolResult[0], _nick_name = _poolResult$.nick_name, _avatar_url = _poolResult$.avatar_url, _school = _poolResult$.school;
             _sql2 = "SELECT * FROM goods WHERE order_id =?";
-            _context5.next = 58;
+            _context5.next = 64;
             return (0, _transformPoolQuery["default"])(_sql2, [orderId]);
 
-          case 58:
+          case 64:
             _poolResult2 = _context5.sent;
 
             if (_poolResult2.length === 1) {
@@ -685,32 +697,32 @@ function () {
               ctx.response.statusCode = _userStatus.statusCodeList.success;
             }
 
-          case 60:
-            _context5.next = 67;
+          case 66:
+            _context5.next = 73;
             break;
 
-          case 62:
-            _context5.prev = 62;
-            _context5.t1 = _context5["catch"](48);
+          case 68:
+            _context5.prev = 68;
+            _context5.t1 = _context5["catch"](54);
             console.log('/getgoodsinfo:数据库操作失败！', _context5.t1);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getgoodsinfo:数据库操作失败！';
 
-          case 67:
-            _context5.next = 72;
+          case 73:
+            _context5.next = 78;
             break;
 
-          case 69:
+          case 75:
             console.log('/getgoodsinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getgoodsinfo:您请求的用户code有误!';
 
-          case 72:
+          case 78:
           case "end":
             return _context5.stop();
         }
       }
-    }, _callee5, null, [[6, 36], [48, 62]]);
+    }, _callee5, null, [[6, 42], [54, 68]]);
   }));
 
   return function getGoodsInfo(_x9, _x10) {
@@ -2332,7 +2344,7 @@ function () {
                 };
               }());
             }).then(function () {
-              console.log("/getCareList:查询关注列表成功，但无数据！");
+              console.log("/getCareList:查询关注列表成功");
               ctx.response.statusCode = _userStatus.statusCodeList.success;
               ctx.response.body = {
                 status: _userStatus.statusList.success,
@@ -2384,6 +2396,262 @@ function () {
   };
 }();
 
+var collect =
+/*#__PURE__*/
+function () {
+  var _ref23 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee23(ctx, next) {
+    var _ctx$request$body4, code, orderId, result, openid, sql1, poolResult1, sql2, poolResult2, sql3, poolResult3;
+
+    return _regenerator["default"].wrap(function _callee23$(_context23) {
+      while (1) {
+        switch (_context23.prev = _context23.next) {
+          case 0:
+            _ctx$request$body4 = ctx.request.body, code = _ctx$request$body4.code, orderId = _ctx$request$body4.orderId;
+
+            if (!code) {
+              _context23.next = 33;
+              break;
+            }
+
+            _context23.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context23.sent;
+            openid = result.openid;
+            _context23.prev = 6;
+            sql1 = "SELECT * FROM user_collect WHERE open_id = ? AND collect_order_id = ?";
+            _context23.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid, orderId]);
+
+          case 10:
+            poolResult1 = _context23.sent;
+
+            if (!(poolResult1.length === 1)) {
+              _context23.next = 19;
+              break;
+            }
+
+            sql2 = "DELETE FROM user_collect WHERE open_id = ? AND collect_order_id = ?";
+            _context23.next = 15;
+            return (0, _transformPoolQuery["default"])(sql2, [openid, orderId]);
+
+          case 15:
+            poolResult2 = _context23.sent;
+
+            if (poolResult2.affectedRows === 1) {
+              console.log("/collect:取消收藏成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            }
+
+            _context23.next = 24;
+            break;
+
+          case 19:
+            sql3 = "INSERT INTO user_collect(open_id,collect_order_id) VALUES (?,?)";
+            _context23.next = 22;
+            return (0, _transformPoolQuery["default"])(sql3, [openid, orderId]);
+
+          case 22:
+            poolResult3 = _context23.sent;
+
+            if (poolResult3.affectedRows === 1) {
+              console.log("/collect:收藏成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            }
+
+          case 24:
+            _context23.next = 31;
+            break;
+
+          case 26:
+            _context23.prev = 26;
+            _context23.t0 = _context23["catch"](6);
+            console.log('/collect:数据库操作失败！', _context23.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/collect:数据库操作失败！';
+
+          case 31:
+            _context23.next = 36;
+            break;
+
+          case 33:
+            console.log('/collect:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/collect:您请求的用户code有误!';
+
+          case 36:
+          case "end":
+            return _context23.stop();
+        }
+      }
+    }, _callee23, null, [[6, 26]]);
+  }));
+
+  return function collect(_x40, _x41) {
+    return _ref23.apply(this, arguments);
+  };
+}();
+
+var getCollectList =
+/*#__PURE__*/
+function () {
+  var _ref24 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee25(ctx, next) {
+    var _ctx$request$query7, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
+
+    return _regenerator["default"].wrap(function _callee25$(_context25) {
+      while (1) {
+        switch (_context25.prev = _context25.next) {
+          case 0:
+            _ctx$request$query7 = ctx.request.query, code = _ctx$request$query7.code, page = _ctx$request$query7.page;
+            startIndex = (page - 1) * 8;
+            returnDatas = [];
+
+            if (!code) {
+              _context25.next = 30;
+              break;
+            }
+
+            _context25.next = 6;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 6:
+            result = _context25.sent;
+            openid = result.openid;
+            _context25.prev = 8;
+            sql1 = "SELECT collect_order_id FROM user_collect WHERE open_id = ?";
+            _context25.next = 12;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 12:
+            poolResult1 = _context25.sent;
+
+            if (!(poolResult1.length > 0)) {
+              _context25.next = 18;
+              break;
+            }
+
+            _context25.next = 16;
+            return new Promise(function (resolve, reject) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref25 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee24(data, index) {
+                  var collectOrderId, sql2, poolResult2, topPicSrc, len;
+                  return _regenerator["default"].wrap(function _callee24$(_context24) {
+                    while (1) {
+                      switch (_context24.prev = _context24.next) {
+                        case 0:
+                          collectOrderId = data.collect_order_id;
+                          sql2 = "SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE order_id = ? LIMIT ?,8";
+                          _context24.next = 4;
+                          return (0, _transformPoolQuery["default"])(sql2, [collectOrderId, startIndex]);
+
+                        case 4:
+                          poolResult2 = _context24.sent;
+
+                          if (poolResult2.length === 1) {
+                            len = poolResult2[0].pics_location.length;
+
+                            if (len === 0) {
+                              topPicSrc = '';
+                            } else {
+                              topPicSrc = 'https://' + poolResult2[0].pics_location.split(';')[0];
+                            }
+
+                            returnDatas.push({
+                              orderId: poolResult2[0].order_id,
+                              nameInput: poolResult2[0].name_input,
+                              newAndOldDegree: poolResult2[0].new_and_old_degree,
+                              topPicSrc: topPicSrc,
+                              typeOne: poolResult2[0].type_one,
+                              typeTwo: poolResult2[0].type_two,
+                              typeThree: poolResult2[0].type_three,
+                              goodsNumber: poolResult2[0].goods_number
+                            });
+                          }
+
+                          if (returnDatas.length === poolResult1.length) {
+                            resolve();
+                          }
+
+                        case 7:
+                        case "end":
+                          return _context24.stop();
+                      }
+                    }
+                  }, _callee24);
+                }));
+
+                return function (_x44, _x45) {
+                  return _ref25.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/getCollectList:查询收藏列表成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            });
+
+          case 16:
+            _context25.next = 21;
+            break;
+
+          case 18:
+            console.log("/getCollectList:查询收藏列表成功，但无数据！");
+            ctx.response.statusCode = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: _userStatus.statusList.success
+            };
+
+          case 21:
+            _context25.next = 28;
+            break;
+
+          case 23:
+            _context25.prev = 23;
+            _context25.t0 = _context25["catch"](8);
+            console.log('/getCollectList:数据库操作失败！', _context25.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getCollectList:数据库操作失败！';
+
+          case 28:
+            _context25.next = 33;
+            break;
+
+          case 30:
+            console.log('/getCollectList:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getCollectList:您请求的用户code有误!';
+
+          case 33:
+          case "end":
+            return _context25.stop();
+        }
+      }
+    }, _callee25, null, [[8, 23]]);
+  }));
+
+  return function getCollectList(_x42, _x43) {
+    return _ref24.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -2399,4 +2667,6 @@ app.use(_koaRoute["default"].get('/search', search));
 app.use(_koaRoute["default"].get('/orderlist', orderList));
 app.use(_koaRoute["default"].post('/recharge', recharge));
 app.use(_koaRoute["default"].post('/care', care));
-app.use(_koaRoute["default"].get('/getcarelist', getCareList)); // app.listen(3000)
+app.use(_koaRoute["default"].get('/getcarelist', getCareList));
+app.use(_koaRoute["default"].post('/collect', collect));
+app.use(_koaRoute["default"].get('/getcollectlist', getCollectList)); // app.listen(3000)
