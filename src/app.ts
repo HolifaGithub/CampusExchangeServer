@@ -1086,7 +1086,114 @@ const getCareList = async (ctx, next: () => Promise<any>) => {
                         }
                     })
                 }).then(()=>{
-                    console.log("/getCareList:查询关注列表成功，但无数据！")
+                    console.log("/getCareList:查询关注列表成功")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                        returnDatas:returnDatas
+                    }
+                })  
+            } else {
+                console.log("/getCareList:查询关注列表成功，但无数据！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success
+                }
+            }
+        } catch (err) {
+            console.log('/getCareList:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getCareList:数据库操作失败！'
+        }
+    } else {
+        console.log('/getCareList:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getCareList:您请求的用户code有误!'
+    }
+}
+
+const collect = async (ctx, next: () => Promise<any>) => {
+    const { code, orderId } = ctx.request.body
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT * FROM user_collect WHERE open_id = ? AND collect_order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid, orderId])
+            if (poolResult1.length === 1) {
+                const sql2 = `DELETE FROM user_collect WHERE open_id = ? AND collect_order_id = ?`
+                const poolResult2 = await transformPoolQuery(sql2, [openid, orderId])
+                if (poolResult2.affectedRows === 1) {
+                    console.log("/collect:取消收藏成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success
+                    }
+                }
+            } else {
+                    const sql3 = `INSERT INTO user_collect(open_id,collect_order_id) VALUES (?,?,?)`
+                    const poolResult3 = await transformPoolQuery(sql3, [openid,orderId])
+                    if (poolResult3.affectedRows === 1) {
+                        console.log("/collect:收藏成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success
+                        }
+                    }
+            }
+        } catch (err) {
+            console.log('/collect:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/collect:数据库操作失败！'
+        }
+    } else {
+        console.log('/collect:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/collect:您请求的用户code有误!'
+    }
+}
+
+const getCollectList = async (ctx, next: () => Promise<any>) => {
+    const { code,page } = ctx.request.query
+    const startIndex = (page - 1) * 8
+    let returnDatas:OrderListReturnDatas[] = []
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT collect_order_id FROM user_collect WHERE open_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length > 0) {
+                await new Promise((resolve, reject) => {
+                    poolResult1.map(async(data, index) => {
+                        const collectOrderId = data.collect_order_id
+                        const sql2 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE order_id = ? LIMIT ?,8`
+                        const poolResult2 = await transformPoolQuery(sql2, [collectOrderId,startIndex])
+                        if (poolResult2.length === 1) {
+                            let topPicSrc
+                            const len = poolResult2[0].pics_location.length
+                            if (len === 0) {
+                                topPicSrc = ''
+                            } else {
+                                topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                            }
+                            returnDatas.push({
+                                orderId: data.order_id,
+                                nameInput: data.name_input,
+                                newAndOldDegree: data.new_and_old_degree,
+                                topPicSrc: topPicSrc,
+                                typeOne: data.type_one,
+                                typeTwo: data.type_two,
+                                typeThree: data.type_three,
+                                goodsNumber: data.goods_number
+                            })
+                        }
+                        if(returnDatas.length===poolResult1.length){
+                            resolve()
+                        }
+                    })
+                }).then(()=>{
+                    console.log("/getCareList:查询收藏列表成功！")
                     ctx.response.statusCode = statusCodeList.success
                     ctx.response.body = {
                         status: statusList.success,
@@ -1127,4 +1234,6 @@ app.use(route.get('/orderlist', orderList))
 app.use(route.post('/recharge', recharge))
 app.use(route.post('/care', care))
 app.use(route.get('/getcarelist', getCareList))
+app.use(route.post('/collect', collect))
+app.use(route.post('/getcollectlist', getCollectList))
 // app.listen(3000)

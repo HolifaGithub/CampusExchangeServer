@@ -65,9 +65,15 @@ CREATE TABLE user_order(
 
 DROP TABLE IF EXISTS user_care;
 CREATE TABLE user_care(
-     open_id VARCHAR(30) NOT NULL,
+     open_id VARCHAR(30) PRIMARY KEY,
      concerned_open_id VARCHAR(30) NOT NULL,
      concerned_order_id VARCHAR(30) NOT NULL
+);
+
+DROP TABLE IF EXISTS user_collect;
+CREATE TABLE user_collect(
+     open_id VARCHAR(30) PRIMARY KEY,
+     collect_order_id VARCHAR(30) NOT NULL
 );
 
 
