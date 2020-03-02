@@ -1201,7 +1201,7 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
                     }
                 })  
             } else {
-                console.log("/getCareList:查询关注列表成功，但无数据！")
+                console.log("/getCareList:查询收藏列表成功，但无数据！")
                 ctx.response.statusCode = statusCodeList.success
                 ctx.response.body = {
                     status: statusList.success
@@ -1235,5 +1235,5 @@ app.use(route.post('/recharge', recharge))
 app.use(route.post('/care', care))
 app.use(route.get('/getcarelist', getCareList))
 app.use(route.post('/collect', collect))
-app.use(route.post('/getcollectlist', getCollectList))
+app.use(route.get('/getcollectlist', getCollectList))
 // app.listen(3000)
