@@ -1131,7 +1131,7 @@ const collect = async (ctx, next: () => Promise<any>) => {
                     }
                 }
             } else {
-                    const sql3 = `INSERT INTO user_collect(open_id,collect_order_id) VALUES (?,?,?)`
+                    const sql3 = `INSERT INTO user_collect(open_id,collect_order_id) VALUES (?,?)`
                     const poolResult3 = await transformPoolQuery(sql3, [openid,orderId])
                     if (poolResult3.affectedRows === 1) {
                         console.log("/collect:收藏成功！")
