@@ -25,8 +25,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-http.createServer(app.callback()).listen(3000)
-// https.createServer(httpsOption, app.callback()).listen(3000)
+// http.createServer(app.callback()).listen(3000)
+https.createServer(httpsOption, app.callback()).listen(3000)
 app.use(body({ multipart: true }))
 // app.use(bodyParse())
 
@@ -266,8 +266,14 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                         const sql4 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_open_id = ?`
                         const poolResult4 = await transformPoolQuery(sql4, [openid, salerOpenId])
                         let isCare = false
+                        let isCollect=false
                         if (poolResult4.length === 1) {
                             isCare = true
+                        }
+                        const sql5 = `SELECT * FROM user_collect WHERE open_id = ? AND collect_order_id = ?`
+                        const poolResult5 = await transformPoolQuery(sql5, [openid, orderId])
+                        if (poolResult5.length === 1) {
+                            isCollect = true
                         }
                         console.log('/getgoodsinfo:获取商品详情成功！')
                         ctx.response.body = {
@@ -291,7 +297,8 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                             nickName: nick_name,
                             avatarUrl: avatar_url,
                             school: school,
-                            isCare: isCare
+                            isCare: isCare,
+                            isCollect:isCollect
                         }
                         ctx.response.statusCode = statusCodeList.success
                     }
@@ -1178,22 +1185,27 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
                                 topPicSrc = 'https://' + poolResult2[0].pics_location.split(';')[0]
                             }
                             returnDatas.push({
-                                orderId: data.order_id,
-                                nameInput: data.name_input,
-                                newAndOldDegree: data.new_and_old_degree,
+                                orderId: poolResult2[0].order_id,
+                                nameInput: poolResult2[0].name_input,
+                                newAndOldDegree: poolResult2[0].new_and_old_degree,
                                 topPicSrc: topPicSrc,
-                                typeOne: data.type_one,
-                                typeTwo: data.type_two,
-                                typeThree: data.type_three,
-                                goodsNumber: data.goods_number
+                                typeOne: poolResult2[0].type_one,
+                                typeTwo: poolResult2[0].type_two,
+                                typeThree: poolResult2[0].type_three,
+                                goodsNumber: poolResult2[0].goods_number
                             })
                         }
                         if (returnDatas.length === poolResult1.length) {
                             resolve()
                         }
                     })
+<<<<<<< HEAD
                 }).then(() => {
                     console.log("/getCareList:查询收藏列表成功！")
+=======
+                }).then(()=>{
+                    console.log("/getCollectList:查询收藏列表成功！")
+>>>>>>> temp
                     ctx.response.statusCode = statusCodeList.success
                     ctx.response.body = {
                         status: statusList.success,
@@ -1201,21 +1213,21 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
                     }
                 })
             } else {
-                console.log("/getCareList:查询收藏列表成功，但无数据！")
+                console.log("/getCollectList:查询收藏列表成功，但无数据！")
                 ctx.response.statusCode = statusCodeList.success
                 ctx.response.body = {
                     status: statusList.success
                 }
             }
         } catch (err) {
-            console.log('/getCareList:数据库操作失败！', err)
+            console.log('/getCollectList:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
-            ctx.response.body = '/getCareList:数据库操作失败！'
+            ctx.response.body = '/getCollectList:数据库操作失败！'
         }
     } else {
-        console.log('/getCareList:您请求的用户code有误!')
+        console.log('/getCollectList:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
-        ctx.response.body = '/getCareList:您请求的用户code有误!'
+        ctx.response.body = '/getCollectList:您请求的用户code有误!'
     }
 }
 app.use(route.post('/login', login))
