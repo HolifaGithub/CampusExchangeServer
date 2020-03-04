@@ -263,8 +263,8 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                     const poolResult3 = await transformPoolQuery(sql3, [orderId])
                     if (poolResult3.length === 1) {
                         const { order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location } = poolResult3[0]
-                        const sql4 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_order_id = ?`
-                        const poolResult4 = await transformPoolQuery(sql4, [openid, orderId])
+                        const sql4 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_open_id = ?`
+                        const poolResult4 = await transformPoolQuery(sql4, [openid, salerOpenId])
                         let isCare = false
                         if (poolResult4.length === 1) {
                             isCare = true
@@ -1008,23 +1008,23 @@ const care = async (ctx, next: () => Promise<any>) => {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_order_id = ?`
-            const poolResult1 = await transformPoolQuery(sql1, [openid, orderId])
+            const sql1 = `SELECT open_id FROM goods WHERE order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [orderId])
             if (poolResult1.length === 1) {
-                const sql2 = `DELETE FROM user_care WHERE open_id = ? AND concerned_order_id = ?`
-                const poolResult2 = await transformPoolQuery(sql2, [openid, orderId])
-                if (poolResult2.affectedRows === 1) {
-                    console.log("/care:取消关注成功！")
-                    ctx.response.statusCode = statusCodeList.success
-                    ctx.response.body = {
-                        status: statusList.success
+                const concernedOpenId = poolResult1[0].open_id
+                const sql2 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_open_id = ?`
+                const poolResult2 = await transformPoolQuery(sql2, [openid, concernedOpenId])
+                if (poolResult2.length === 1) {
+                    const sql3 = `DELETE FROM user_care WHERE open_id = ? AND concerned_open_id = ?`
+                    const poolResult3 = await transformPoolQuery(sql3, [openid, concernedOpenId])
+                    if (poolResult3.affectedRows === 1) {
+                        console.log("/care:取消关注成功！")
+                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success
+                        }
                     }
-                }
-            } else {
-                const sql3 = `SELECT open_id FROM goods WHERE order_id = ?`
-                const poolResult3 = await transformPoolQuery(sql3, [orderId])
-                if (poolResult3.length === 1) {
-                    const concernedOpenId = poolResult3[0].open_id
+                } else {
                     const sql4 = `INSERT INTO user_care(open_id,concerned_open_id,concerned_order_id) VALUES (?,?,?)`
                     const poolResult4 = await transformPoolQuery(sql4, [openid, concernedOpenId, orderId])
                     if (poolResult4.affectedRows === 1) {
@@ -1048,17 +1048,17 @@ const care = async (ctx, next: () => Promise<any>) => {
     }
 }
 
-interface GetCareListReturnList{
-    nickName:string;
-    avatarUrl:string;
-    collage:string;
-    userClass:string;
-    concernedOrderId:string;
+interface GetCareListReturnList {
+    nickName: string;
+    avatarUrl: string;
+    collage: string;
+    userClass: string;
+    concernedOrderId: string;
 }
 const getCareList = async (ctx, next: () => Promise<any>) => {
-    const { code,page } = ctx.request.query
+    const { code, page } = ctx.request.query
     const startIndex = (page - 1) * 8
-    let returnDatas:GetCareListReturnList[] = []
+    let returnDatas: GetCareListReturnList[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
@@ -1067,32 +1067,32 @@ const getCareList = async (ctx, next: () => Promise<any>) => {
             const poolResult1 = await transformPoolQuery(sql1, [openid])
             if (poolResult1.length > 0) {
                 await new Promise((resolve, reject) => {
-                    poolResult1.map(async(data, index) => {
+                    poolResult1.map(async (data, index) => {
                         const concernedOpenId = data.concerned_open_id
                         const concernedOrderId = data.concerned_order_id
                         const sql2 = `SELECT avatar_url,nick_name,collage,user_class FROM user_info WHERE open_id = ? LIMIT ?,8`
-                        const poolResult2 = await transformPoolQuery(sql2, [concernedOpenId,startIndex])
+                        const poolResult2 = await transformPoolQuery(sql2, [concernedOpenId, startIndex])
                         if (poolResult2.length === 1) {
                             returnDatas.push({
-                                nickName:poolResult2[0].nick_name,
-                                avatarUrl:poolResult2[0].avatar_url,
-                                collage:poolResult2[0].collage,
-                                userClass:poolResult2[0].user_class,
-                                concernedOrderId:concernedOrderId
+                                nickName: poolResult2[0].nick_name,
+                                avatarUrl: poolResult2[0].avatar_url,
+                                collage: poolResult2[0].collage,
+                                userClass: poolResult2[0].user_class,
+                                concernedOrderId: concernedOrderId
                             })
                         }
-                        if(returnDatas.length===poolResult1.length){
+                        if (returnDatas.length === poolResult1.length) {
                             resolve()
                         }
                     })
-                }).then(()=>{
+                }).then(() => {
                     console.log("/getCareList:查询关注列表成功")
                     ctx.response.statusCode = statusCodeList.success
                     ctx.response.body = {
                         status: statusList.success,
-                        returnDatas:returnDatas
+                        returnDatas: returnDatas
                     }
-                })  
+                })
             } else {
                 console.log("/getCareList:查询关注列表成功，但无数据！")
                 ctx.response.statusCode = statusCodeList.success
@@ -1131,15 +1131,15 @@ const collect = async (ctx, next: () => Promise<any>) => {
                     }
                 }
             } else {
-                    const sql3 = `INSERT INTO user_collect(open_id,collect_order_id) VALUES (?,?)`
-                    const poolResult3 = await transformPoolQuery(sql3, [openid,orderId])
-                    if (poolResult3.affectedRows === 1) {
-                        console.log("/collect:收藏成功！")
-                        ctx.response.statusCode = statusCodeList.success
-                        ctx.response.body = {
-                            status: statusList.success
-                        }
+                const sql3 = `INSERT INTO user_collect(open_id,collect_order_id) VALUES (?,?)`
+                const poolResult3 = await transformPoolQuery(sql3, [openid, orderId])
+                if (poolResult3.affectedRows === 1) {
+                    console.log("/collect:收藏成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success
                     }
+                }
             }
         } catch (err) {
             console.log('/collect:数据库操作失败！', err)
@@ -1154,9 +1154,9 @@ const collect = async (ctx, next: () => Promise<any>) => {
 }
 
 const getCollectList = async (ctx, next: () => Promise<any>) => {
-    const { code,page } = ctx.request.query
+    const { code, page } = ctx.request.query
     const startIndex = (page - 1) * 8
-    let returnDatas:OrderListReturnDatas[] = []
+    let returnDatas: OrderListReturnDatas[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
@@ -1165,17 +1165,17 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
             const poolResult1 = await transformPoolQuery(sql1, [openid])
             if (poolResult1.length > 0) {
                 await new Promise((resolve, reject) => {
-                    poolResult1.map(async(data, index) => {
+                    poolResult1.map(async (data, index) => {
                         const collectOrderId = data.collect_order_id
                         const sql2 = `SELECT name_input,order_id,type_one,type_two,type_three,goods_number,new_and_old_degree,pics_location FROM goods WHERE order_id = ? LIMIT ?,8`
-                        const poolResult2 = await transformPoolQuery(sql2, [collectOrderId,startIndex])
+                        const poolResult2 = await transformPoolQuery(sql2, [collectOrderId, startIndex])
                         if (poolResult2.length === 1) {
                             let topPicSrc
                             const len = poolResult2[0].pics_location.length
                             if (len === 0) {
                                 topPicSrc = ''
                             } else {
-                                topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                                topPicSrc = 'https://' + poolResult2[0].pics_location.split(';')[0]
                             }
                             returnDatas.push({
                                 orderId: data.order_id,
@@ -1188,18 +1188,18 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
                                 goodsNumber: data.goods_number
                             })
                         }
-                        if(returnDatas.length===poolResult1.length){
+                        if (returnDatas.length === poolResult1.length) {
                             resolve()
                         }
                     })
-                }).then(()=>{
+                }).then(() => {
                     console.log("/getCareList:查询收藏列表成功！")
                     ctx.response.statusCode = statusCodeList.success
                     ctx.response.body = {
                         status: statusList.success,
-                        returnDatas:returnDatas
+                        returnDatas: returnDatas
                     }
-                })  
+                })
             } else {
                 console.log("/getCareList:查询收藏列表成功，但无数据！")
                 ctx.response.statusCode = statusCodeList.success
