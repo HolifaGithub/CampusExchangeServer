@@ -30,7 +30,7 @@ var _miniProgramInfo = require("./static-name/mini-program-info");
 
 var _userStatus = require("./static-name/user-status");
 
-var _https = _interopRequireDefault(require("https"));
+var _http = _interopRequireDefault(require("http"));
 
 // import bodyParse from 'koa-bodyparser'
 var body = require('koa-body');
@@ -44,9 +44,10 @@ var certContent = _fs["default"].readFileSync(_path["default"].join(__dirname, '
 var httpsOption = {
   key: keyContent,
   cert: certContent
-}; // http.createServer(app.callback()).listen(3000)
+};
 
-_https["default"].createServer(httpsOption, app.callback()).listen(3000);
+_http["default"].createServer(app.callback()).listen(3000); // https.createServer(httpsOption, app.callback()).listen(3000)
+
 
 app.use(body({
   multipart: true
@@ -1517,13 +1518,13 @@ function () {
   var _ref13 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee14(ctx, next) {
-    var _ctx$request$query4, value, page, startIndex, returnDatas, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searchResult, sql2, poolResult2;
+    var _ctx$request$query4, value, page, searchStart, startIndex, returnDatas, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searchResult, sql2, poolResult2;
 
     return _regenerator["default"].wrap(function _callee14$(_context14) {
       while (1) {
         switch (_context14.prev = _context14.next) {
           case 0:
-            _ctx$request$query4 = ctx.request.query, value = _ctx$request$query4.value, page = _ctx$request$query4.page;
+            _ctx$request$query4 = ctx.request.query, value = _ctx$request$query4.value, page = _ctx$request$query4.page, searchStart = _ctx$request$query4.searchStart;
             startIndex = (page - 1) * 6;
             returnDatas = [];
 
@@ -1610,7 +1611,7 @@ function () {
             return _context14.finish(26);
 
           case 34:
-            searchResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray);
+            searchResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart);
 
             if (!searchResult) {
               _context14.next = 44;
@@ -1663,8 +1664,8 @@ function () {
                               wantExchangeGoods: data.want_exchange_goods,
                               topPicSrc: topPicSrc,
                               watchedPeople: data.watched_people,
-                              nickName: poolResult2[0].nick_name,
-                              avatarUrl: poolResult2[0].avatar_url
+                              nickName: poolResult3[0].nick_name,
+                              avatarUrl: poolResult3[0].avatar_url
                             });
                           }
 
@@ -1928,7 +1929,9 @@ function () {
               ctx.response.statusCode = _userStatus.statusCodeList.success;
               ctx.response.body = {
                 status: _userStatus.statusList.success,
-                returnDatas: orderListReturnDatas
+                returnDatas: orderListReturnDatas,
+                orderStatus: orderStatus,
+                orderInfo: orderInfo
               };
             });
 
@@ -2015,7 +2018,9 @@ function () {
               ctx.response.statusCode = _userStatus.statusCodeList.success;
               ctx.response.body = {
                 status: _userStatus.statusList.success,
-                returnDatas: orderListReturnDatas
+                returnDatas: orderListReturnDatas,
+                orderStatus: orderStatus,
+                orderInfo: orderInfo
               };
             });
 
@@ -2568,18 +2573,18 @@ function () {
                             if (len === 0) {
                               topPicSrc = '';
                             } else {
-                              topPicSrc = 'https://' + data.pics_location.split(';')[0];
+                              topPicSrc = 'https://' + poolResult2[0].pics_location.split(';')[0];
                             }
 
                             returnDatas.push({
-                              orderId: data.order_id,
-                              nameInput: data.name_input,
-                              newAndOldDegree: data.new_and_old_degree,
+                              orderId: poolResult2[0].order_id,
+                              nameInput: poolResult2[0].name_input,
+                              newAndOldDegree: poolResult2[0].new_and_old_degree,
                               topPicSrc: topPicSrc,
-                              typeOne: data.type_one,
-                              typeTwo: data.type_two,
-                              typeThree: data.type_three,
-                              goodsNumber: data.goods_number
+                              typeOne: poolResult2[0].type_one,
+                              typeTwo: poolResult2[0].type_two,
+                              typeThree: poolResult2[0].type_three,
+                              goodsNumber: poolResult2[0].goods_number
                             });
                           }
 
@@ -2613,7 +2618,7 @@ function () {
             break;
 
           case 18:
-            console.log("/getCareList:查询收藏列表成功，但无数据！");
+            console.log("/getCollectList:查询收藏列表成功，但无数据！");
             ctx.response.statusCode = _userStatus.statusCodeList.success;
             ctx.response.body = {
               status: _userStatus.statusList.success
@@ -2626,18 +2631,18 @@ function () {
           case 23:
             _context25.prev = 23;
             _context25.t0 = _context25["catch"](8);
-            console.log('/getCareList:数据库操作失败！', _context25.t0);
+            console.log('/getCollectList:数据库操作失败！', _context25.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
-            ctx.response.body = '/getCareList:数据库操作失败！';
+            ctx.response.body = '/getCollectList:数据库操作失败！';
 
           case 28:
             _context25.next = 33;
             break;
 
           case 30:
-            console.log('/getCareList:您请求的用户code有误!');
+            console.log('/getCollectList:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
-            ctx.response.body = '/getCareList:您请求的用户code有误!';
+            ctx.response.body = '/getCollectList:您请求的用户code有误!';
 
           case 33:
           case "end":

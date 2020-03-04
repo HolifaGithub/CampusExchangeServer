@@ -25,8 +25,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-// http.createServer(app.callback()).listen(3000)
-https.createServer(httpsOption, app.callback()).listen(3000)
+http.createServer(app.callback()).listen(3000)
+// https.createServer(httpsOption, app.callback()).listen(3000)
 app.use(body({ multipart: true }))
 // app.use(bodyParse())
 
@@ -720,7 +720,7 @@ const trading = async (ctx, next: () => Promise<any>) => {
 }
 
 const search = async (ctx, next: () => Promise<any>) => {
-    const { value, page } = ctx.request.query
+    const { value, page,searchStart } = ctx.request.query
     const startIndex = (page - 1) * 6
     const returnDatas: ReturnDataObject[] = []
     if (value.length > 0) {
@@ -748,7 +748,7 @@ const search = async (ctx, next: () => Promise<any>) => {
                     }
                 }
                 // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
-                let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray)
+                let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray,searchStart)
                 if (searchResult) {
                     const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ${searchResult.col} = ? AND order_status = 'released' LIMIT ?,6;`
                     const poolResult2 = await transformPoolQuery(sql2, [searchResult.value, startIndex])
@@ -775,8 +775,8 @@ const search = async (ctx, next: () => Promise<any>) => {
                                     wantExchangeGoods: data.want_exchange_goods,
                                     topPicSrc: topPicSrc,
                                     watchedPeople: data.watched_people,
-                                    nickName: poolResult2[0].nick_name,
-                                    avatarUrl: poolResult2[0].avatar_url
+                                    nickName: poolResult3[0].nick_name,
+                                    avatarUrl: poolResult3[0].avatar_url
                                 })
                             }
                             if (returnDatas.length === poolResult2.length) {
@@ -912,7 +912,9 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                         ctx.response.statusCode = statusCodeList.success
                         ctx.response.body = {
                             status: statusList.success,
-                            returnDatas: orderListReturnDatas
+                            returnDatas: orderListReturnDatas,
+                            orderStatus: orderStatus,
+                            orderInfo: orderInfo
                         }
                     })
                 } else {
@@ -957,7 +959,9 @@ const orderList = async (ctx, next: () => Promise<any>) => {
                         ctx.response.statusCode = statusCodeList.success
                         ctx.response.body = {
                             status: statusList.success,
-                            returnDatas: orderListReturnDatas
+                            returnDatas: orderListReturnDatas,
+                            orderStatus: orderStatus,
+                            orderInfo: orderInfo
                         }
                     })
                 } else {
@@ -1199,13 +1203,8 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
                             resolve()
                         }
                     })
-<<<<<<< HEAD
                 }).then(() => {
                     console.log("/getCareList:查询收藏列表成功！")
-=======
-                }).then(()=>{
-                    console.log("/getCollectList:查询收藏列表成功！")
->>>>>>> temp
                     ctx.response.statusCode = statusCodeList.success
                     ctx.response.body = {
                         status: statusList.success,
