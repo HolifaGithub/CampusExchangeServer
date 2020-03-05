@@ -17,6 +17,8 @@ import { resolve } from 'dns'
 import http from 'http'
 import https from 'https'
 import { start } from 'repl'
+import WebSocket from 'ws'
+
 
 const app = new Koa()
 const keyContent = fs.readFileSync(path.join(__dirname, '../https/2.key'))
@@ -25,10 +27,32 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-http.createServer(app.callback()).listen(3000)
-// https.createServer(httpsOption, app.callback()).listen(3000)
+const server = http.createServer(app.callback()).listen(3000)
+// const server=https.createServer(httpsOption, app.callback()).listen(3000)
+
+
+const wss = new WebSocket.Server({ server })
+const connectedUser = []
+wss.on('connection', function connection(ws) {
+    console.log('ws连接成功！')
+    ws.on('message', async (msg: string) => {
+        const result = await getOpenIdAndSessionKey(msg)
+        const { openid } = result
+        if (openid) {
+            ws.openId = openid
+        }
+        wss.clients.forEach((client) => {
+            console.log(client.openId)
+            client.send('kkk')
+        })
+    })
+
+})
+
+
 app.use(body({ multipart: true }))
 // app.use(bodyParse())
+
 
 const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
     let isNewUser = true
@@ -266,7 +290,7 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                         const sql4 = `SELECT * FROM user_care WHERE open_id = ? AND concerned_open_id = ?`
                         const poolResult4 = await transformPoolQuery(sql4, [openid, salerOpenId])
                         let isCare = false
-                        let isCollect=false
+                        let isCollect = false
                         if (poolResult4.length === 1) {
                             isCare = true
                         }
@@ -298,7 +322,7 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                             avatarUrl: avatar_url,
                             school: school,
                             isCare: isCare,
-                            isCollect:isCollect
+                            isCollect: isCollect
                         }
                         ctx.response.statusCode = statusCodeList.success
                     }
@@ -720,7 +744,7 @@ const trading = async (ctx, next: () => Promise<any>) => {
 }
 
 const search = async (ctx, next: () => Promise<any>) => {
-    const { value, page,searchStart } = ctx.request.query
+    const { value, page, searchStart } = ctx.request.query
     const startIndex = (page - 1) * 6
     const returnDatas: ReturnDataObject[] = []
     if (value.length > 0) {
@@ -748,7 +772,7 @@ const search = async (ctx, next: () => Promise<any>) => {
                     }
                 }
                 // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
-                let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray,searchStart)
+                let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart)
                 if (searchResult) {
                     const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ${searchResult.col} = ? AND order_status = 'released' LIMIT ?,6;`
                     const poolResult2 = await transformPoolQuery(sql2, [searchResult.value, startIndex])
@@ -1229,6 +1253,33 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/getCollectList:您请求的用户code有误!'
     }
 }
+
+const tradingScanCode = async (ctx, next: () => Promise<any>) => {
+    const {code,scanResult}=ctx.request.body
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try{
+            const partArray = scanResult.split(',')
+            if(partArray.length===3){
+                const salerOpenIdPart=partArray[0]
+                const orderIdPart = partArray[1]
+                const buierOpenIdPart = partArray[2]
+                console.log(partArray)
+                // const sql1 =`SELECT open_id,order_id,buy_open_id FROM goods WHERE `
+            }
+        }catch(err){
+            console.log('/tradingscancode:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/tradingscancode:数据库操作失败！'
+        }
+
+    }else{
+        console.log('/tradingscancode:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/tradingscancode:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -1247,4 +1298,5 @@ app.use(route.post('/care', care))
 app.use(route.get('/getcarelist', getCareList))
 app.use(route.post('/collect', collect))
 app.use(route.get('/getcollectlist', getCollectList))
+app.use(route.post('/tradingscancode', tradingScanCode))
 // app.listen(3000)
