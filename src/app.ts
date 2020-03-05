@@ -27,8 +27,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-const server = http.createServer(app.callback()).listen(3000)
-// const server=https.createServer(httpsOption, app.callback()).listen(3000)
+// const server = http.createServer(app.callback()).listen(3000)
+const server = https.createServer(httpsOption, app.callback()).listen(3000)
 
 
 const wss = new WebSocket.Server({ server })
@@ -38,13 +38,13 @@ wss.on('connection', function connection(ws) {
     ws.on('message', async (msg: string) => {
         const result = await getOpenIdAndSessionKey(msg)
         const { openid } = result
-        if (openid) {
+        if (openid || !ws.openId) {
             ws.openId = openid
         }
-        wss.clients.forEach((client) => {
-            console.log(client.openId)
-            client.send('kkk')
-        })
+        // wss.clients.forEach((client) => {
+        //     console.log(client.openId)
+        //     client.send('kkk')
+        // })
     })
 
 })
@@ -715,7 +715,7 @@ const trading = async (ctx, next: () => Promise<any>) => {
                         const buierAddress = poolResult3[0].user_address
                         const buierAvatarUrl = poolResult3[0].avatar_url
                         const buierNickName = poolResult3[0].nick_name
-                        const orderCode = openId.slice(6, 18) + ',' + orderId.slice(0, 12) + ',' + buyOpenId.slice(6, 18)
+                        const orderCode = orderId
                         console.log('/trading:交易成功')
                         ctx.response.status = statusCodeList.success
                         ctx.response.body = {
@@ -1255,26 +1255,86 @@ const getCollectList = async (ctx, next: () => Promise<any>) => {
 }
 
 const tradingScanCode = async (ctx, next: () => Promise<any>) => {
-    const {code,scanResult}=ctx.request.body
+    const { code, scanResult } = ctx.request.body
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
-        try{
-            const partArray = scanResult.split(',')
-            if(partArray.length===3){
-                const salerOpenIdPart=partArray[0]
-                const orderIdPart = partArray[1]
-                const buierOpenIdPart = partArray[2]
-                console.log(partArray)
-                // const sql1 =`SELECT open_id,order_id,buy_open_id FROM goods WHERE `
+        try {
+            const sql1 = `SELECT open_id,order_id,buy_open_id,pay_for_me_price,pay_for_other_price FROM goods WHERE order_id = ? `
+            const poolResult1 = await transformPoolQuery(sql1, [scanResult])
+            if (poolResult1.length === 1) {
+                const openId = poolResult1[0].open_id
+                const orderId = poolResult1[0].order_id
+                const buyOpenId = poolResult1[0].buy_open_id
+                const payForMePrice = poolResult1[0].pay_for_me_price
+                const payForOtherPrice = poolResult1[0].pay_for_other_price
+                if (openid === openId || openid === buyOpenId) {  //如果扫码的是卖家或者买家才能完成交易，否则报错
+                    const sql2 = `UPDATE goods SET order_status = ? WHERE order_id = ?`
+                    const poolResult2 = await transformPoolQuery(sql2, ['completed', orderId])
+                    if (poolResult2.affectedRows === 1) {
+                        const sql3 = 'UPDATE user_order SET bougth = bougth +1,trading = trading - 1 WHERE open_id =?'
+                        const poolResult3 = await transformPoolQuery(sql3, [buyOpenId])
+                        if (poolResult3.affectedRows === 1) {
+                            const sql4 = `UPDATE user_order SET saled = saled +1,trading = trading - 1  WHERE open_id =?`
+                            const poolResult4 = await transformPoolQuery(sql4, [openId])
+                            if (poolResult4.affectedRows === 1) {
+                                if (payForMePrice != 0) {
+                                    const sql5 = `UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id = ? `
+                                    const poolResult5 = await transformPoolQuery(sql5, [payForMePrice,payForMePrice,openId])
+                                    if (poolResult5.affectedRows === 1) {
+                                        wss.clients.forEach((client) => {
+                                            if (client.openId === openId || client.openId === buyOpenId) {
+                                                console.log('/tradingscancode:扫码交易成功！')
+                                                client.send(JSON.stringify({
+                                                    status: statusList.success
+                                                }))
+                                                ctx.response.status = statusCodeList.success
+                                                ctx.response.body = {
+                                                    status: statusList.success,
+                                                    data: '/tradingscancode:扫码交易成功！'
+                                                }
+                                            }
+                                        })
+                                    }
+                                } else if (payForOtherPrice != 0) {
+                                    const sql6 = `UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id = ? `
+                                    const poolResult6 = await transformPoolQuery(sql6, [payForOtherPrice,payForOtherPrice,buyOpenId])
+                                    if (poolResult6.affectedRows === 1) {
+                                        wss.clients.forEach((client) => {
+                                            if (client.openId === openId || client.openId === buyOpenId) {
+                                                console.log('/tradingscancode:扫码交易成功！')
+                                                client.send(JSON.stringify({
+                                                    status: statusList.success
+                                                }))
+                                                ctx.response.status = statusCodeList.success
+                                                ctx.response.body = {
+                                                    status: statusList.success,
+                                                    data: '/tradingscancode:扫码交易成功！'
+                                                }
+                                            }
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    console.log('/tradingscancode:扫码失败，该用户不是该订单的交易人！')
+                    ctx.response.status = statusCodeList.fail
+                    ctx.response.body = {
+                        status: statusList.fail,
+                        msg: '/tradingscancode:扫码失败，该用户不是该订单的交易人！'
+
+                    }
+                }
             }
-        }catch(err){
+        } catch (err) {
             console.log('/tradingscancode:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/tradingscancode:数据库操作失败！'
         }
 
-    }else{
+    } else {
         console.log('/tradingscancode:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/tradingscancode:您请求的用户code有误!'
