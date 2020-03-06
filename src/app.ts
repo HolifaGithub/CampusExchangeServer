@@ -291,40 +291,49 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                         const poolResult4 = await transformPoolQuery(sql4, [openid, salerOpenId])
                         let isCare = false
                         let isCollect = false
+                        let isMe = false
                         if (poolResult4.length === 1) {
                             isCare = true
+                        }
+                        if (openid === salerOpenId) {
+                            isMe = true
                         }
                         const sql5 = `SELECT * FROM user_collect WHERE open_id = ? AND collect_order_id = ?`
                         const poolResult5 = await transformPoolQuery(sql5, [openid, orderId])
                         if (poolResult5.length === 1) {
                             isCollect = true
                         }
-                        console.log('/getgoodsinfo:获取商品详情成功！')
-                        ctx.response.body = {
-                            status: statusList.success,
-                            orderId: order_id,
-                            orderTime: order_time,
-                            orderStatus: order_status,
-                            typeOne: type_one,
-                            typeTwo: type_two,
-                            typeThree: type_three,
-                            nameInput: name_input,
-                            goodsNumber: goods_number,
-                            newAndOldDegree: new_and_old_degree,
-                            mode: mode,
-                            objectOfPayment: object_of_payment,
-                            payForMePrice: pay_for_me_price,
-                            payForOtherPrice: pay_for_other_price,
-                            wantExchangeGoods: want_exchange_goods,
-                            describe: goods_describe,
-                            picsLocation: pics_location,
-                            nickName: nick_name,
-                            avatarUrl: avatar_url,
-                            school: school,
-                            isCare: isCare,
-                            isCollect: isCollect
+                        const sql6 = `UPDATE goods SET watched_people = watched_people +1 WHERE order_id = ?`
+                        const poolResult6 = await transformPoolQuery(sql6, [orderId])
+                        if (poolResult6.affectedRows === 1) {
+                            console.log('/getgoodsinfo:获取商品详情成功！')
+                            ctx.response.body = {
+                                status: statusList.success,
+                                orderId: order_id,
+                                orderTime: order_time,
+                                orderStatus: order_status,
+                                typeOne: type_one,
+                                typeTwo: type_two,
+                                typeThree: type_three,
+                                nameInput: name_input,
+                                goodsNumber: goods_number,
+                                newAndOldDegree: new_and_old_degree,
+                                mode: mode,
+                                objectOfPayment: object_of_payment,
+                                payForMePrice: pay_for_me_price,
+                                payForOtherPrice: pay_for_other_price,
+                                wantExchangeGoods: want_exchange_goods,
+                                describe: goods_describe,
+                                picsLocation: pics_location,
+                                nickName: nick_name,
+                                avatarUrl: avatar_url,
+                                school: school,
+                                isCare: isCare,
+                                isCollect: isCollect,
+                                isMe: isMe
+                            }
+                            ctx.response.statusCode = statusCodeList.success
                         }
-                        ctx.response.statusCode = statusCodeList.success
                     }
                 }
             }
@@ -367,7 +376,8 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                         picsLocation: pics_location,
                         nickName: nick_name,
                         avatarUrl: avatar_url,
-                        school: school
+                        school: school,
+                        isMe:true
                     }
                     ctx.response.statusCode = statusCodeList.success
                 }
@@ -1280,7 +1290,7 @@ const tradingScanCode = async (ctx, next: () => Promise<any>) => {
                             if (poolResult4.affectedRows === 1) {
                                 if (payForMePrice != 0) {
                                     const sql5 = `UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id = ? `
-                                    const poolResult5 = await transformPoolQuery(sql5, [payForMePrice,payForMePrice,openId])
+                                    const poolResult5 = await transformPoolQuery(sql5, [payForMePrice, payForMePrice, openId])
                                     if (poolResult5.affectedRows === 1) {
                                         wss.clients.forEach((client) => {
                                             if (client.openId === openId || client.openId === buyOpenId) {
@@ -1298,7 +1308,7 @@ const tradingScanCode = async (ctx, next: () => Promise<any>) => {
                                     }
                                 } else if (payForOtherPrice != 0) {
                                     const sql6 = `UPDATE  user_money SET balance = balance + ?,income=income + ?  where open_id = ? `
-                                    const poolResult6 = await transformPoolQuery(sql6, [payForOtherPrice,payForOtherPrice,buyOpenId])
+                                    const poolResult6 = await transformPoolQuery(sql6, [payForOtherPrice, payForOtherPrice, buyOpenId])
                                     if (poolResult6.affectedRows === 1) {
                                         wss.clients.forEach((client) => {
                                             if (client.openId === openId || client.openId === buyOpenId) {
