@@ -78,4 +78,14 @@ CREATE TABLE user_collect(
      collect_order_id VARCHAR(30) NOT NULL
 );
 
+DROP TABLE IF EXISTS user_chat;
+CREATE TABLE user_chat(
+     id INT(20) PRIMARY KEY  AUTO_INCREMENT,
+     send_open_id VARCHAR(30) NOT NULL,
+     receive_open_id VARCHAR(30) NOT NULL,
+     order_id VARCHAR(30) NOT NULL,
+     chat_time  DATETIME,
+     content VARCHAR(30) NOT NULL
+);
+
 

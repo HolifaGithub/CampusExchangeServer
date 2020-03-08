@@ -22,9 +22,7 @@ function getOpenIdAndSessionKey(_x) {
 }
 
 function _getOpenIdAndSessionKey() {
-  _getOpenIdAndSessionKey = (0, _asyncToGenerator2["default"])(
-  /*#__PURE__*/
-  _regenerator["default"].mark(function _callee(code) {
+  _getOpenIdAndSessionKey = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee(code) {
     var requestUrl, result;
     return _regenerator["default"].wrap(function _callee$(_context) {
       while (1) {

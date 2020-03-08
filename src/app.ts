@@ -27,8 +27,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-// const server = http.createServer(app.callback()).listen(3000)
-const server = https.createServer(httpsOption, app.callback()).listen(3000)
+const server = http.createServer(app.callback()).listen(3000)
+// const server = https.createServer(httpsOption, app.callback()).listen(3000)
 
 
 const wss = new WebSocket.Server({ server })
@@ -377,7 +377,7 @@ const getGoodsInfo = async (ctx, next: () => Promise<any>) => {
                         nickName: nick_name,
                         avatarUrl: avatar_url,
                         school: school,
-                        isMe:true
+                        isMe: true
                     }
                     ctx.response.statusCode = statusCodeList.success
                 }
@@ -1350,6 +1350,79 @@ const tradingScanCode = async (ctx, next: () => Promise<any>) => {
         ctx.response.body = '/tradingscancode:您请求的用户code有误!'
     }
 }
+
+interface ChatInfo{
+    type:number;
+    chatTime:string;
+    content:string;
+} 
+const getChatInfo = async (ctx, next: () => Promise<any>) => {
+    const { code, orderId } = ctx.request.query
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT open_id,pay_for_me_price,pay_for_other_price goods_number,new_and_old_degree,want_exchange_goods,pics_location,name_input FROM goods WHERE order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [orderId])
+            if (poolResult1.length === 1) {
+                const { chatOpenId, payForMePrice, payForOtherPrice, goodsNumber, newAndOldDegree, wantExchangeGoods, nameInput, picsLocation } = poolResult1[0]
+                let topPicSrc
+                const len = picsLocation.length
+                if (len === 0) {
+                    topPicSrc = ''
+                } else {
+                    topPicSrc = 'https://' + picsLocation.split(';')[0]
+                }
+                let goodsInfo = {
+                    payForMePrice,
+                    payForOtherPrice,
+                    goodsNumber,
+                    newAndOldDegree,
+                    wantExchangeGoods,
+                    nameInput,
+                    topPicSrc
+                }
+                let chatInfo:ChatInfo[] = []
+                const sql2 = `SELECT send_open_id ,chat_time,content FROM user _chat WHERE (send_open_id = ? | send_open_id = ?) AND (receive_open_id = ? | receive_open_id = ? ) `
+                const poolResult2 = await transformPoolQuery(sql2, [openid, chatOpenId, openid, chatOpenId])
+                if (poolResult2.length > 0) {
+                    for (let i = 0; i < poolResult2.length; i++) {
+                        let sendOpenId = poolResult2[i].send_open_id
+                        let chatTime = poolResult2[i].chatTime
+                        let content = poolResult2[i].content
+                        let type
+                        if (sendOpenId === openid) {
+                            type = 0
+                        } else if (sendOpenId === chatOpenId) {
+                            type = 1
+                        }
+                        chatInfo.push({
+                            type:type,
+                            chatTime:chatTime,
+                            content:content
+                        })
+                    }
+                }
+                console.log(chatInfo)
+                console.log('/getchatinfo:获取聊天内容页数据成功')
+                ctx.response.status = statusCodeList.success
+                ctx.response.body = {
+                    status:statusList.success,
+                    goodsInfo,
+                    chatInfo
+                }
+            }
+        } catch (err) {
+            console.log('/getchatinfo:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/tradingscancode:数据库操作失败！'
+        }
+    } else {
+        console.log('/getchatinfo:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getchatinfo:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -1369,4 +1442,5 @@ app.use(route.get('/getcarelist', getCareList))
 app.use(route.post('/collect', collect))
 app.use(route.get('/getcollectlist', getCollectList))
 app.use(route.post('/tradingscancode', tradingScanCode))
+app.use(route.get('/getchatinfo', getChatInfo))
 // app.listen(3000)
