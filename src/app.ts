@@ -27,8 +27,8 @@ const httpsOption = {
     key: keyContent,
     cert: certContent
 }
-const server = http.createServer(app.callback()).listen(3000)
-// const server = https.createServer(httpsOption, app.callback()).listen(3000)
+// const server = http.createServer(app.callback()).listen(3000)
+const server = https.createServer(httpsOption, app.callback()).listen(3000)
 
 
 const wss = new WebSocket.Server({ server })
@@ -1351,11 +1351,11 @@ const tradingScanCode = async (ctx, next: () => Promise<any>) => {
     }
 }
 
-interface ChatInfo{
-    type:number;
-    chatTime:string;
-    content:string;
-} 
+interface ChatInfo {
+    type: number;
+    chatTime: string;
+    content: string;
+}
 const getChatInfo = async (ctx, next: () => Promise<any>) => {
     const { code, orderId } = ctx.request.query
     if (code) {
@@ -1365,30 +1365,32 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
             const sql1 = `SELECT open_id,pay_for_me_price,pay_for_other_price goods_number,new_and_old_degree,want_exchange_goods,pics_location,name_input FROM goods WHERE order_id = ?`
             const poolResult1 = await transformPoolQuery(sql1, [orderId])
             if (poolResult1.length === 1) {
-                const { chatOpenId, payForMePrice, payForOtherPrice, goodsNumber, newAndOldDegree, wantExchangeGoods, nameInput, picsLocation } = poolResult1[0]
+                const { open_id, pay_for_me_price, pay_for_other_price, goods_number, new_and_old_degree, want_exchange_goods, name_input, pics_location } = poolResult1[0]
+                const chatOpenId = open_id
                 let topPicSrc
-                const len = picsLocation.length
+                const len = pics_location.split(';').length
                 if (len === 0) {
                     topPicSrc = ''
                 } else {
-                    topPicSrc = 'https://' + picsLocation.split(';')[0]
+                    topPicSrc = 'https://' + pics_location.split(';')[0]
                 }
                 let goodsInfo = {
-                    payForMePrice,
-                    payForOtherPrice,
-                    goodsNumber,
-                    newAndOldDegree,
-                    wantExchangeGoods,
-                    nameInput,
-                    topPicSrc
+                    payForMePrice: pay_for_me_price,
+                    payForOtherPrice: pay_for_other_price,
+                    goodsNumber: goods_number,
+                    newAndOldDegree: new_and_old_degree,
+                    wantExchangeGoods: want_exchange_goods,
+                    nameInput: name_input,
+                    topPicSrc,
+                    orderId:orderId
                 }
-                let chatInfo:ChatInfo[] = []
-                const sql2 = `SELECT send_open_id ,chat_time,content FROM user _chat WHERE (send_open_id = ? | send_open_id = ?) AND (receive_open_id = ? | receive_open_id = ? ) `
-                const poolResult2 = await transformPoolQuery(sql2, [openid, chatOpenId, openid, chatOpenId])
+                let chatInfo: ChatInfo[] = []
+                const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE (send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? ) `
+                const poolResult2 = await transformPoolQuery(sql2, [openid, chatOpenId, chatOpenId, openid])
                 if (poolResult2.length > 0) {
                     for (let i = 0; i < poolResult2.length; i++) {
                         let sendOpenId = poolResult2[i].send_open_id
-                        let chatTime = poolResult2[i].chatTime
+                        let chatTime = poolResult2[i].chat_time
                         let content = poolResult2[i].content
                         let type
                         if (sendOpenId === openid) {
@@ -1397,9 +1399,9 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                             type = 1
                         }
                         chatInfo.push({
-                            type:type,
-                            chatTime:chatTime,
-                            content:content
+                            type: type,
+                            chatTime: chatTime,
+                            content: content
                         })
                     }
                 }
@@ -1407,7 +1409,7 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                 console.log('/getchatinfo:获取聊天内容页数据成功')
                 ctx.response.status = statusCodeList.success
                 ctx.response.body = {
-                    status:statusList.success,
+                    status: statusList.success,
                     goodsInfo,
                     chatInfo
                 }

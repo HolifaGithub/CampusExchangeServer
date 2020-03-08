@@ -30,7 +30,7 @@ var _miniProgramInfo = require("./static-name/mini-program-info");
 
 var _userStatus = require("./static-name/user-status");
 
-var _http = _interopRequireDefault(require("http"));
+var _https = _interopRequireDefault(require("https"));
 
 var _ws = _interopRequireDefault(require("ws"));
 
@@ -46,10 +46,9 @@ var certContent = _fs["default"].readFileSync(_path["default"].join(__dirname, '
 var httpsOption = {
   key: keyContent,
   cert: certContent
-};
+}; // const server = http.createServer(app.callback()).listen(3000)
 
-var server = _http["default"].createServer(app.callback()).listen(3000); // const server = https.createServer(httpsOption, app.callback()).listen(3000)
-
+var server = _https["default"].createServer(httpsOption, app.callback()).listen(3000);
 
 var wss = new _ws["default"].Server({
   server: server
@@ -57,8 +56,12 @@ var wss = new _ws["default"].Server({
 var connectedUser = [];
 wss.on('connection', function connection(ws) {
   console.log('ws连接成功！');
-  ws.on('message', /*#__PURE__*/function () {
-    var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee(msg) {
+  ws.on('message',
+  /*#__PURE__*/
+  function () {
+    var _ref = (0, _asyncToGenerator2["default"])(
+    /*#__PURE__*/
+    _regenerator["default"].mark(function _callee(msg) {
       var result, openid;
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
@@ -96,8 +99,12 @@ app.use(body({
   multipart: true
 })); // app.use(bodyParse())
 
-var login = /*#__PURE__*/function () {
-  var _ref2 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee2(ctx, next) {
+var login =
+/*#__PURE__*/
+function () {
+  var _ref2 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee2(ctx, next) {
     var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, checkSignatureResult, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3, sql4, result4, sql5, result5, sql6, result6;
     return _regenerator["default"].wrap(function _callee2$(_context2) {
       while (1) {
@@ -297,8 +304,12 @@ var login = /*#__PURE__*/function () {
   };
 }();
 
-var register = /*#__PURE__*/function () {
-  var _ref3 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee3(ctx, next) {
+var register =
+/*#__PURE__*/
+function () {
+  var _ref3 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee3(ctx, next) {
     var requestBody, code, selectedSchool, studentId, education, grade, collage, userClass, name, idCard, phone, address, result, openid, sql2, result2;
     return _regenerator["default"].wrap(function _callee3$(_context3) {
       while (1) {
@@ -385,8 +396,12 @@ var register = /*#__PURE__*/function () {
   };
 }();
 
-var releaseGoods = /*#__PURE__*/function () {
-  var _ref4 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee4(ctx, next) {
+var releaseGoods =
+/*#__PURE__*/
+function () {
+  var _ref4 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee4(ctx, next) {
     var requestBody, typeOne, typeTwo, typeThree, nameInput, goodsNumber, newAndOldDegree, mode, objectOfPayment, payForMePrice, payForOtherPrice, wantExchangeGoods, describe, picsLocation, orderId, code, orderStatus, result, openid, sql, poolResult, sql2, poolResult2;
     return _regenerator["default"].wrap(function _callee4$(_context4) {
       while (1) {
@@ -482,8 +497,12 @@ var releaseGoods = /*#__PURE__*/function () {
   };
 }();
 
-var releasegoodspics = /*#__PURE__*/function () {
-  var _ref5 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee5(ctx, next) {
+var releasegoodspics =
+/*#__PURE__*/
+function () {
+  var _ref5 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee5(ctx, next) {
     var orderId, file, upLoadCosResult, location;
     return _regenerator["default"].wrap(function _callee5$(_context5) {
       while (1) {
@@ -533,8 +552,12 @@ var releasegoodspics = /*#__PURE__*/function () {
   };
 }();
 
-var getGoodsInfo = /*#__PURE__*/function () {
-  var _ref6 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee6(ctx, next) {
+var getGoodsInfo =
+/*#__PURE__*/
+function () {
+  var _ref6 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee6(ctx, next) {
     var _ctx$request$query, code, orderId, result, openid, sql1, poolResult1, salerOpenId, sql2, poolResult2, _poolResult2$, nick_name, avatar_url, school, sql3, poolResult3, _poolResult3$, order_id, order_time, order_status, type_one, type_two, type_three, name_input, goods_number, new_and_old_degree, mode, object_of_payment, pay_for_me_price, pay_for_other_price, want_exchange_goods, goods_describe, pics_location, sql4, poolResult4, isCare, isCollect, isMe, sql5, poolResult5, sql6, poolResult6, _result, _openid, _sql, _poolResult, _poolResult$, _nick_name, _avatar_url, _school, _sql2, _poolResult2, _poolResult2$2, _order_id, _order_time, _order_status, _type_one, _type_two, _type_three, _name_input, _goods_number, _new_and_old_degree, _mode, _object_of_payment, _pay_for_me_price, _pay_for_other_price, _want_exchange_goods, _goods_describe, _pics_location;
 
     return _regenerator["default"].wrap(function _callee6$(_context6) {
@@ -770,8 +793,12 @@ var getGoodsInfo = /*#__PURE__*/function () {
   };
 }();
 
-var getUserInfo = /*#__PURE__*/function () {
-  var _ref7 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee7(ctx, next) {
+var getUserInfo =
+/*#__PURE__*/
+function () {
+  var _ref7 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee7(ctx, next) {
     var _ctx$request$query2, code, orderId, result, openid, sql1, poolResult1, _poolResult1$, nick_name, gender, country, province, city, avatar_url, school, id, education, grade, collage, user_class, user_name, id_card, phone, user_address;
 
     return _regenerator["default"].wrap(function _callee7$(_context7) {
@@ -856,8 +883,12 @@ var getUserInfo = /*#__PURE__*/function () {
   };
 }();
 
-var getMoney = /*#__PURE__*/function () {
-  var _ref8 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee8(ctx, next) {
+var getMoney =
+/*#__PURE__*/
+function () {
+  var _ref8 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee8(ctx, next) {
     var code, result, openid, sql1, poolResult1, balance;
     return _regenerator["default"].wrap(function _callee8$(_context8) {
       while (1) {
@@ -926,8 +957,12 @@ var getMoney = /*#__PURE__*/function () {
   };
 }();
 
-var getOrderInfo = /*#__PURE__*/function () {
-  var _ref9 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee9(ctx, next) {
+var getOrderInfo =
+/*#__PURE__*/
+function () {
+  var _ref9 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee9(ctx, next) {
     var code, result, openid, sql1, poolResult1, _poolResult1$2, released, _trading, bougth, saled;
 
     return _regenerator["default"].wrap(function _callee9$(_context9) {
@@ -1000,8 +1035,12 @@ var getOrderInfo = /*#__PURE__*/function () {
   };
 }();
 
-var getWaterFall = /*#__PURE__*/function () {
-  var _ref10 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee11(ctx, next) {
+var getWaterFall =
+/*#__PURE__*/
+function () {
+  var _ref10 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee11(ctx, next) {
     var _ctx$request$query3, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
 
     return _regenerator["default"].wrap(function _callee11$(_context11) {
@@ -1042,8 +1081,12 @@ var getWaterFall = /*#__PURE__*/function () {
 
             _context11.next = 17;
             return new Promise(function (resolve, reject) {
-              poolResult1.map( /*#__PURE__*/function () {
-                var _ref11 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee10(data) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref11 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee10(data) {
                   var sql2, poolResult2, topPicSrc, len;
                   return _regenerator["default"].wrap(function _callee10$(_context10) {
                     while (1) {
@@ -1151,8 +1194,12 @@ var getWaterFall = /*#__PURE__*/function () {
   };
 }();
 
-var pay = /*#__PURE__*/function () {
-  var _ref12 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee12(ctx, next) {
+var pay =
+/*#__PURE__*/
+function () {
+  var _ref12 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee12(ctx, next) {
     var _ctx$request$body, code, orderId, payForMePrice, payForOtherPrice, result, openid, sql1, poolResult1, balance, sql2, poolResult2, sql3, poolResult3, salerOpenId, sql4, poolResult4, sql5, poolResult5, sql6, poolResult6, _sql3, _poolResult3, _salerOpenId, _sql4, _poolResult4, _balance, _sql5, _poolResult5, _sql6, _poolResult6, _sql7, _poolResult7, _sql8, _poolResult8;
 
     return _regenerator["default"].wrap(function _callee12$(_context12) {
@@ -1420,8 +1467,12 @@ var pay = /*#__PURE__*/function () {
   };
 }();
 
-var trading = /*#__PURE__*/function () {
-  var _ref13 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee13(ctx, next) {
+var trading =
+/*#__PURE__*/
+function () {
+  var _ref13 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee13(ctx, next) {
     var orderId, sql1, poolResult1, openId, buyOpenId, sql2, poolResult2, salederPhone, salederAddress, sql3, poolResult3, buierPhone, buierAddress, buierAvatarUrl, buierNickName, orderCode;
     return _regenerator["default"].wrap(function _callee13$(_context13) {
       while (1) {
@@ -1523,8 +1574,12 @@ var trading = /*#__PURE__*/function () {
   };
 }();
 
-var search = /*#__PURE__*/function () {
-  var _ref14 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee15(ctx, next) {
+var search =
+/*#__PURE__*/
+function () {
+  var _ref14 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee15(ctx, next) {
     var _ctx$request$query4, value, page, searchStart, startIndex, returnDatas, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searchResult, sql2, poolResult2;
 
     return _regenerator["default"].wrap(function _callee15$(_context15) {
@@ -1633,8 +1688,12 @@ var search = /*#__PURE__*/function () {
             poolResult2 = _context15.sent;
             _context15.next = 42;
             return new Promise(function (resolve, reject) {
-              poolResult2.map( /*#__PURE__*/function () {
-                var _ref15 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee14(data) {
+              poolResult2.map(
+              /*#__PURE__*/
+              function () {
+                var _ref15 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee14(data) {
                   var sql3, poolResult3, topPicSrc, len;
                   return _regenerator["default"].wrap(function _callee14$(_context14) {
                     while (1) {
@@ -1742,8 +1801,12 @@ var search = /*#__PURE__*/function () {
   };
 }();
 
-var orderList = /*#__PURE__*/function () {
-  var _ref16 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee19(ctx, next) {
+var orderList =
+/*#__PURE__*/
+function () {
+  var _ref16 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee19(ctx, next) {
     var _ctx$request$query5, code, orderStatus, orderInfo, page, startIndex, orderListReturnDatas, result, openid, sql1, poolResult1, _sql9, _poolResult9, _sql10, _poolResult10;
 
     return _regenerator["default"].wrap(function _callee19$(_context19) {
@@ -1786,8 +1849,12 @@ var orderList = /*#__PURE__*/function () {
 
             _context19.next = 17;
             return new Promise(function (resolve, reject) {
-              poolResult1.map( /*#__PURE__*/function () {
-                var _ref17 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee16(data) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref17 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee16(data) {
                   var topPicSrc, len;
                   return _regenerator["default"].wrap(function _callee16$(_context16) {
                     while (1) {
@@ -1873,8 +1940,12 @@ var orderList = /*#__PURE__*/function () {
 
             _context19.next = 30;
             return new Promise(function (resolve, reject) {
-              _poolResult9.map( /*#__PURE__*/function () {
-                var _ref18 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee17(data) {
+              _poolResult9.map(
+              /*#__PURE__*/
+              function () {
+                var _ref18 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee17(data) {
                   var topPicSrc, len;
                   return _regenerator["default"].wrap(function _callee17$(_context17) {
                     while (1) {
@@ -1958,8 +2029,12 @@ var orderList = /*#__PURE__*/function () {
 
             _context19.next = 43;
             return new Promise(function (resolve, reject) {
-              _poolResult10.map( /*#__PURE__*/function () {
-                var _ref19 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee18(data) {
+              _poolResult10.map(
+              /*#__PURE__*/
+              function () {
+                var _ref19 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee18(data) {
                   var topPicSrc, len;
                   return _regenerator["default"].wrap(function _callee18$(_context18) {
                     while (1) {
@@ -2056,8 +2131,12 @@ var orderList = /*#__PURE__*/function () {
   };
 }();
 
-var recharge = /*#__PURE__*/function () {
-  var _ref20 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee20(ctx, next) {
+var recharge =
+/*#__PURE__*/
+function () {
+  var _ref20 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee20(ctx, next) {
     var _ctx$request$body2, code, value, result, openid, sql1, poolResult1;
 
     return _regenerator["default"].wrap(function _callee20$(_context20) {
@@ -2125,8 +2204,12 @@ var recharge = /*#__PURE__*/function () {
   };
 }();
 
-var care = /*#__PURE__*/function () {
-  var _ref21 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee21(ctx, next) {
+var care =
+/*#__PURE__*/
+function () {
+  var _ref21 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee21(ctx, next) {
     var _ctx$request$body3, code, orderId, result, openid, sql1, poolResult1, concernedOpenId, sql2, poolResult2, sql3, poolResult3, sql4, poolResult4;
 
     return _regenerator["default"].wrap(function _callee21$(_context21) {
@@ -2239,8 +2322,12 @@ var care = /*#__PURE__*/function () {
   };
 }();
 
-var getCareList = /*#__PURE__*/function () {
-  var _ref22 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee23(ctx, next) {
+var getCareList =
+/*#__PURE__*/
+function () {
+  var _ref22 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee23(ctx, next) {
     var _ctx$request$query6, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
 
     return _regenerator["default"].wrap(function _callee23$(_context23) {
@@ -2277,8 +2364,12 @@ var getCareList = /*#__PURE__*/function () {
 
             _context23.next = 16;
             return new Promise(function (resolve, reject) {
-              poolResult1.map( /*#__PURE__*/function () {
-                var _ref23 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee22(data, index) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref23 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee22(data, index) {
                   var concernedOpenId, concernedOrderId, sql2, poolResult2;
                   return _regenerator["default"].wrap(function _callee22$(_context22) {
                     while (1) {
@@ -2372,8 +2463,12 @@ var getCareList = /*#__PURE__*/function () {
   };
 }();
 
-var collect = /*#__PURE__*/function () {
-  var _ref24 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee24(ctx, next) {
+var collect =
+/*#__PURE__*/
+function () {
+  var _ref24 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee24(ctx, next) {
     var _ctx$request$body4, code, orderId, result, openid, sql1, poolResult1, sql2, poolResult2, sql3, poolResult3;
 
     return _regenerator["default"].wrap(function _callee24$(_context24) {
@@ -2473,8 +2568,12 @@ var collect = /*#__PURE__*/function () {
   };
 }();
 
-var getCollectList = /*#__PURE__*/function () {
-  var _ref25 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee26(ctx, next) {
+var getCollectList =
+/*#__PURE__*/
+function () {
+  var _ref25 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee26(ctx, next) {
     var _ctx$request$query7, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
 
     return _regenerator["default"].wrap(function _callee26$(_context26) {
@@ -2511,8 +2610,12 @@ var getCollectList = /*#__PURE__*/function () {
 
             _context26.next = 16;
             return new Promise(function (resolve, reject) {
-              poolResult1.map( /*#__PURE__*/function () {
-                var _ref26 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee25(data, index) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref26 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee25(data, index) {
                   var collectOrderId, sql2, poolResult2, topPicSrc, len;
                   return _regenerator["default"].wrap(function _callee25$(_context25) {
                     while (1) {
@@ -2616,8 +2719,12 @@ var getCollectList = /*#__PURE__*/function () {
   };
 }();
 
-var tradingScanCode = /*#__PURE__*/function () {
-  var _ref27 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee27(ctx, next) {
+var tradingScanCode =
+/*#__PURE__*/
+function () {
+  var _ref27 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee27(ctx, next) {
     var _ctx$request$body5, code, scanResult, result, openid, sql1, poolResult1, openId, orderId, buyOpenId, payForMePrice, payForOtherPrice, sql2, poolResult2, sql3, poolResult3, sql4, poolResult4, sql5, poolResult5, sql6, poolResult6;
 
     return _regenerator["default"].wrap(function _callee27$(_context27) {
@@ -2803,9 +2910,13 @@ var tradingScanCode = /*#__PURE__*/function () {
   };
 }();
 
-var getChatInfo = /*#__PURE__*/function () {
-  var _ref28 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee28(ctx, next) {
-    var _ctx$request$query8, code, orderId, result, openid, sql1, poolResult1, _poolResult1$3, chatOpenId, payForMePrice, payForOtherPrice, goodsNumber, newAndOldDegree, wantExchangeGoods, nameInput, picsLocation, topPicSrc, len, goodsInfo, chatInfo, sql2, poolResult2, i, sendOpenId, chatTime, content, type;
+var getChatInfo =
+/*#__PURE__*/
+function () {
+  var _ref28 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee28(ctx, next) {
+    var _ctx$request$query8, code, orderId, result, openid, sql1, poolResult1, _poolResult1$3, open_id, pay_for_me_price, pay_for_other_price, goods_number, new_and_old_degree, want_exchange_goods, name_input, pics_location, chatOpenId, topPicSrc, len, goodsInfo, chatInfo, sql2, poolResult2, i, sendOpenId, chatTime, content, type;
 
     return _regenerator["default"].wrap(function _callee28$(_context28) {
       while (1) {
@@ -2814,7 +2925,7 @@ var getChatInfo = /*#__PURE__*/function () {
             _ctx$request$query8 = ctx.request.query, code = _ctx$request$query8.code, orderId = _ctx$request$query8.orderId;
 
             if (!code) {
-              _context28.next = 35;
+              _context28.next = 36;
               break;
             }
 
@@ -2833,40 +2944,42 @@ var getChatInfo = /*#__PURE__*/function () {
             poolResult1 = _context28.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context28.next = 26;
+              _context28.next = 27;
               break;
             }
 
-            _poolResult1$3 = poolResult1[0], chatOpenId = _poolResult1$3.chatOpenId, payForMePrice = _poolResult1$3.payForMePrice, payForOtherPrice = _poolResult1$3.payForOtherPrice, goodsNumber = _poolResult1$3.goodsNumber, newAndOldDegree = _poolResult1$3.newAndOldDegree, wantExchangeGoods = _poolResult1$3.wantExchangeGoods, nameInput = _poolResult1$3.nameInput, picsLocation = _poolResult1$3.picsLocation;
-            len = picsLocation.length;
+            _poolResult1$3 = poolResult1[0], open_id = _poolResult1$3.open_id, pay_for_me_price = _poolResult1$3.pay_for_me_price, pay_for_other_price = _poolResult1$3.pay_for_other_price, goods_number = _poolResult1$3.goods_number, new_and_old_degree = _poolResult1$3.new_and_old_degree, want_exchange_goods = _poolResult1$3.want_exchange_goods, name_input = _poolResult1$3.name_input, pics_location = _poolResult1$3.pics_location;
+            chatOpenId = open_id;
+            len = pics_location.split(';').length;
 
             if (len === 0) {
               topPicSrc = '';
             } else {
-              topPicSrc = 'https://' + picsLocation.split(';')[0];
+              topPicSrc = 'https://' + pics_location.split(';')[0];
             }
 
             goodsInfo = {
-              payForMePrice: payForMePrice,
-              payForOtherPrice: payForOtherPrice,
-              goodsNumber: goodsNumber,
-              newAndOldDegree: newAndOldDegree,
-              wantExchangeGoods: wantExchangeGoods,
-              nameInput: nameInput,
-              topPicSrc: topPicSrc
+              payForMePrice: pay_for_me_price,
+              payForOtherPrice: pay_for_other_price,
+              goodsNumber: goods_number,
+              newAndOldDegree: new_and_old_degree,
+              wantExchangeGoods: want_exchange_goods,
+              nameInput: name_input,
+              topPicSrc: topPicSrc,
+              orderId: orderId
             };
             chatInfo = [];
-            sql2 = "SELECT send_open_id ,chat_time,content FROM user _chat WHERE (send_open_id = ? | send_open_id = ?) AND (receive_open_id = ? | receive_open_id = ? ) ";
-            _context28.next = 20;
-            return (0, _transformPoolQuery["default"])(sql2, [openid, chatOpenId, openid, chatOpenId]);
+            sql2 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE (send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? ) ";
+            _context28.next = 21;
+            return (0, _transformPoolQuery["default"])(sql2, [openid, chatOpenId, chatOpenId, openid]);
 
-          case 20:
+          case 21:
             poolResult2 = _context28.sent;
 
             if (poolResult2.length > 0) {
               for (i = 0; i < poolResult2.length; i++) {
                 sendOpenId = poolResult2[i].send_open_id;
-                chatTime = poolResult2[i].chatTime;
+                chatTime = poolResult2[i].chat_time;
                 content = poolResult2[i].content;
                 type = void 0;
 
@@ -2893,32 +3006,32 @@ var getChatInfo = /*#__PURE__*/function () {
               chatInfo: chatInfo
             };
 
-          case 26:
-            _context28.next = 33;
+          case 27:
+            _context28.next = 34;
             break;
 
-          case 28:
-            _context28.prev = 28;
+          case 29:
+            _context28.prev = 29;
             _context28.t0 = _context28["catch"](6);
             console.log('/getchatinfo:数据库操作失败！', _context28.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/tradingscancode:数据库操作失败！';
 
-          case 33:
-            _context28.next = 38;
+          case 34:
+            _context28.next = 39;
             break;
 
-          case 35:
+          case 36:
             console.log('/getchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:您请求的用户code有误!';
 
-          case 38:
+          case 39:
           case "end":
             return _context28.stop();
         }
       }
-    }, _callee28, null, [[6, 28]]);
+    }, _callee28, null, [[6, 29]]);
   }));
 
   return function getChatInfo(_x49, _x50) {
