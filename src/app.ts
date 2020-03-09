@@ -1357,12 +1357,12 @@ interface ChatInfo {
     content: string;
 }
 const getChatInfo = async (ctx, next: () => Promise<any>) => {
-    const { code, orderId } = ctx.request.query
+    const { code, orderId, getChatInfoStartTime } = ctx.request.query
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT open_id,pay_for_me_price,pay_for_other_price goods_number,new_and_old_degree,want_exchange_goods,pics_location,name_input FROM goods WHERE order_id = ?`
+            const sql1 = `SELECT open_id,pay_for_me_price,pay_for_other_price,goods_number,new_and_old_degree,want_exchange_goods,pics_location,name_input FROM goods WHERE order_id = ?`
             const poolResult1 = await transformPoolQuery(sql1, [orderId])
             if (poolResult1.length === 1) {
                 const { open_id, pay_for_me_price, pay_for_other_price, goods_number, new_and_old_degree, want_exchange_goods, name_input, pics_location } = poolResult1[0]
@@ -1382,47 +1382,117 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                     wantExchangeGoods: want_exchange_goods,
                     nameInput: name_input,
                     topPicSrc,
-                    orderId:orderId
+                    orderId: orderId
                 }
                 let chatInfo: ChatInfo[] = []
-                const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE (send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? ) `
-                const poolResult2 = await transformPoolQuery(sql2, [openid, chatOpenId, chatOpenId, openid])
-                if (poolResult2.length > 0) {
-                    for (let i = 0; i < poolResult2.length; i++) {
-                        let sendOpenId = poolResult2[i].send_open_id
-                        let chatTime = poolResult2[i].chat_time
-                        let content = poolResult2[i].content
-                        let type
-                        if (sendOpenId === openid) {
-                            type = 0
-                        } else if (sendOpenId === chatOpenId) {
-                            type = 1
+                if (getChatInfoStartTime && getChatInfoStartTime.length > 0) {
+                    const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND chat_time > ? ORDER BY chat_time ASC `
+                    const poolResult2 = await transformPoolQuery(sql2, [openid, chatOpenId, chatOpenId, openid, getChatInfoStartTime])
+                    if (poolResult2.length > 0) {
+                        for (let i = 0; i < poolResult2.length; i++) {
+                            let sendOpenId = poolResult2[i].send_open_id
+                            let chatTime = poolResult2[i].chat_time
+                            let content = poolResult2[i].content
+                            let type
+                            if (sendOpenId === openid) {
+                                type = 0
+                            } else if (sendOpenId === chatOpenId) {
+                                type = 1
+                            }
+                            chatInfo.push({
+                                type: type,
+                                chatTime: chatTime,
+                                content: content
+                            })
                         }
-                        chatInfo.push({
-                            type: type,
-                            chatTime: chatTime,
-                            content: content
-                        })
+                    }
+                } else {
+                    const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) 
+                    ORDER BY chat_time ASC `
+                    const poolResult2 = await transformPoolQuery(sql2, [openid, chatOpenId, chatOpenId, openid])
+                    if (poolResult2.length > 0) {
+                        for (let i = 0; i < poolResult2.length; i++) {
+                            let sendOpenId = poolResult2[i].send_open_id
+                            let chatTime = poolResult2[i].chat_time
+                            let content = poolResult2[i].content
+                            let type
+                            if (sendOpenId === openid) {
+                                type = 0
+                            } else if (sendOpenId === chatOpenId) {
+                                type = 1
+                            }
+                            chatInfo.push({
+                                type: type,
+                                chatTime: chatTime,
+                                content: content
+                            })
+                        }
                     }
                 }
-                console.log(chatInfo)
-                console.log('/getchatinfo:获取聊天内容页数据成功')
-                ctx.response.status = statusCodeList.success
-                ctx.response.body = {
-                    status: statusList.success,
-                    goodsInfo,
-                    chatInfo
+
+                const sql3 = `SELECT nick_name,avatar_url FROM user_info WHERE open_id = ?`
+                const poolResult3 = await transformPoolQuery(sql3, [chatOpenId])
+                if (poolResult3.length === 1) {
+                    const chatNickName = poolResult3[0].nick_name
+                    const chatAvatarUrl = poolResult3[0].avatar_url
+                    const sql4 = `SELECT avatar_url FROM user_info WHERE open_id = ?`
+                    const poolResult4 = await transformPoolQuery(sql4, [openid])
+                    if (poolResult4.length === 1) {
+                        const myAvatarUrl = poolResult4[0].avatar_url
+                        console.log('/getchatinfo:获取聊天内容页数据成功')
+                        ctx.response.status = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
+                            goodsInfo,
+                            chatInfo,
+                            chatNickName,
+                            chatAvatarUrl,
+                            myAvatarUrl
+                        }
+                    }
                 }
             }
         } catch (err) {
             console.log('/getchatinfo:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
-            ctx.response.body = '/tradingscancode:数据库操作失败！'
+            ctx.response.body = '/getchatinfo:数据库操作失败！'
         }
     } else {
         console.log('/getchatinfo:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/getchatinfo:您请求的用户code有误!'
+    }
+}
+
+const sendChatInfo = async (ctx, next: () => Promise<any>) => {
+    const { code, orderId, value } = ctx.request.body
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT open_id FROM goods WHERE order_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [orderId])
+            if (poolResult1.length === 1) {
+                const receiveOpenId = poolResult1[0].open_id
+                const sql2 ='INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )'
+                const poolResult2 = await transformPoolQuery(sql2, [openid,receiveOpenId,orderId,value])
+                if (poolResult2.affectedRows === 1) {
+                    console.log('/sendchatinfo:发送聊天信息成功!')
+                    ctx.response.status = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                    }
+                }
+            }
+        }catch(err){
+            console.log('/sendchatinfo:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/sendchatinfo:数据库操作失败！'
+        }
+    }else{
+        console.log('/sendchatinfo:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/sendchatinfo:您请求的用户code有误!'
     }
 }
 app.use(route.post('/login', login))
@@ -1445,4 +1515,5 @@ app.use(route.post('/collect', collect))
 app.use(route.get('/getcollectlist', getCollectList))
 app.use(route.post('/tradingscancode', tradingScanCode))
 app.use(route.get('/getchatinfo', getChatInfo))
+app.use(route.post('/sendchatinfo', sendChatInfo))
 // app.listen(3000)
