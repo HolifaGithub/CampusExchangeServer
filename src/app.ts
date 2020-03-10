@@ -1429,7 +1429,6 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                         }
                     }
                 }
-
                 const sql3 = `SELECT nick_name,avatar_url FROM user_info WHERE open_id = ?`
                 const poolResult3 = await transformPoolQuery(sql3, [chatOpenId])
                 if (poolResult3.length === 1) {
@@ -1439,6 +1438,12 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                     const poolResult4 = await transformPoolQuery(sql4, [openid])
                     if (poolResult4.length === 1) {
                         const myAvatarUrl = poolResult4[0].avatar_url
+                        const sql5 = `SELECT * FROM user_chat_list WHERE send_open_id = ? AND receive_open_id = ? AND order_id = ?`
+                        const poolResult5 = await transformPoolQuery(sql5, [openid, chatOpenId, orderId])
+                        if (poolResult5.length === 0) {
+                            const sql6 = `INSERT INTO user_chat_list(send_open_id,receive_open_id,order_id) VALUES (?,?,?)`
+                            const poolResult6 = await transformPoolQuery(sql6, [openid, chatOpenId, orderId])
+                        }
                         console.log('/getchatinfo:获取聊天内容页数据成功')
                         ctx.response.status = statusCodeList.success
                         ctx.response.body = {
@@ -1474,9 +1479,29 @@ const sendChatInfo = async (ctx, next: () => Promise<any>) => {
             const poolResult1 = await transformPoolQuery(sql1, [orderId])
             if (poolResult1.length === 1) {
                 const receiveOpenId = poolResult1[0].open_id
-                const sql2 ='INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )'
-                const poolResult2 = await transformPoolQuery(sql2, [openid,receiveOpenId,orderId,value])
+                const sql2 = 'INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )'
+                const poolResult2 = await transformPoolQuery(sql2, [openid, receiveOpenId, orderId, value])
                 if (poolResult2.affectedRows === 1) {
+                    wss.clients.forEach((client) => {
+                        if (client.openId === openid || client.openId === receiveOpenId) {
+                            let type
+                            if (client.openId === openid) {
+                                type = 0
+                            }
+                            if (client.openId === receiveOpenId) {
+                                type = 1
+                            }
+                            const chatTime = new Date()
+                            client.send(JSON.stringify({
+                                status: statusList.success,
+                                chatInfo: [{
+                                    type,
+                                    chatTime,
+                                    content: value
+                                }]
+                            }))
+                        }
+                    })
                     console.log('/sendchatinfo:发送聊天信息成功!')
                     ctx.response.status = statusCodeList.success
                     ctx.response.body = {
@@ -1484,15 +1509,66 @@ const sendChatInfo = async (ctx, next: () => Promise<any>) => {
                     }
                 }
             }
-        }catch(err){
+        } catch (err) {
             console.log('/sendchatinfo:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail
             ctx.response.body = '/sendchatinfo:数据库操作失败！'
         }
-    }else{
+    } else {
         console.log('/sendchatinfo:您请求的用户code有误!')
         ctx.response.status = statusCodeList.fail
         ctx.response.body = '/sendchatinfo:您请求的用户code有误!'
+    }
+}
+
+const getChatList = async (ctx, next: () => Promise<any>) => {
+    const { code, page } = ctx.request.query
+    const startIndex = (page - 1) * 8
+    let returnDatas: [] = []
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 = `SELECT receive_open_id,order_id FROM user_chat_list WHERE send_open_id = ? OR receive_open_id =? limit ?,8`
+            const poolResult1 = await transformPoolQuery(sql1, [openid, openid,startIndex])
+            if (poolResult1.length > 0) {
+                await new Promise((resolve, reject) => {
+                    poolResult1.map(async (data, index) => {
+                        const { receive_open_id, order_id } = data
+                        const sql2 = `SELECT avatar_url,nick_name FROM user_info WHERE open_id = ?`
+                        const poolResult2 = await transformPoolQuery(sql2, [receive_open_id])
+                        if (poolResult2.length === 1) {
+                            const avatarUrl = poolResult2[0].avatar_url
+                            const nickName = poolResult2[0].nick_name
+                            const sql3 = `SELECT pics_location FROM goods WHERE order_id = ?`
+                            const poolResult3 = await transformPoolQuery(sql3, [order_id])
+                            if (poolResult3.length === 1) {
+                                let topPicSrc=''
+                                let lastChatContent=''
+                                let lastChatTime = ''
+                                const len = poolResult3[0].pics_location.length
+                                if (len === 0) {
+                                    topPicSrc = ''
+                                } else {
+                                    topPicSrc = 'https://' + poolResult3[0].pics_location.split(';')[0]
+                                }
+                                const sql4 =`SELECT chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND order_id = ? ORDER BY chat_time DESC LIMIT 1 `
+                                const poolResult4 = await transformPoolQuery(sql4, [openid,openid,])
+                            }
+                        }
+                    })
+                })
+            }
+
+        } catch (err) {
+            console.log('/getchatlist:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getchatlist:数据库操作失败！'
+        }
+    } else {
+        console.log('/getchatlist:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getchatlist:您请求的用户code有误!'
     }
 }
 app.use(route.post('/login', login))
@@ -1516,4 +1592,5 @@ app.use(route.get('/getcollectlist', getCollectList))
 app.use(route.post('/tradingscancode', tradingScanCode))
 app.use(route.get('/getchatinfo', getChatInfo))
 app.use(route.post('/sendchatinfo', sendChatInfo))
+app.use(route.get('/getchatlist', getChatList))
 // app.listen(3000)

@@ -88,4 +88,13 @@ CREATE TABLE user_chat(
      content VARCHAR(30) NOT NULL
 );
 
+DROP TABLE IF EXISTS user_chat_list;
+CREATE TABLE user_chat_list(
+     id INT(20) PRIMARY KEY  AUTO_INCREMENT,
+     send_open_id VARCHAR(30) NOT NULL,
+     receive_open_id VARCHAR(30) NOT NULL,
+     order_id VARCHAR(30) NOT NULL
+);
+
+
 
