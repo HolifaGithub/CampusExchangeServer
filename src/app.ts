@@ -1438,10 +1438,10 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                     const poolResult4 = await transformPoolQuery(sql4, [openid])
                     if (poolResult4.length === 1) {
                         const myAvatarUrl = poolResult4[0].avatar_url
-                        const sql5 = `SELECT * FROM user_chat_list WHERE send_open_id = ? AND receive_open_id = ? AND order_id = ?`
-                        const poolResult5 = await transformPoolQuery(sql5, [openid, chatOpenId, orderId])
+                        const sql5 = `SELECT * FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?`
+                        const poolResult5 = await transformPoolQuery(sql5, [openid, chatOpenId, chatOpenId, openid, orderId])
                         if (poolResult5.length === 0) {
-                            const sql6 = `INSERT INTO user_chat_list(send_open_id,receive_open_id,order_id) VALUES (?,?,?)`
+                            const sql6 = `INSERT INTO user_chat_list(chat_one_open_id,chat_two_open_id,order_id) VALUES (?,?,?)`
                             const poolResult6 = await transformPoolQuery(sql6, [openid, chatOpenId, orderId])
                         }
                         console.log('/getchatinfo:获取聊天内容页数据成功')
@@ -1521,30 +1521,48 @@ const sendChatInfo = async (ctx, next: () => Promise<any>) => {
     }
 }
 
+interface ChatListReturnDatas{
+    avatarUrl:string;
+    nickName:string;
+    topPicSrc:string;
+    lastChatContent:string;
+    lastChatTime:string;
+    orderId:string;
+}
 const getChatList = async (ctx, next: () => Promise<any>) => {
     const { code, page } = ctx.request.query
     const startIndex = (page - 1) * 8
-    let returnDatas: [] = []
+    let returnDatas: ChatListReturnDatas[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT receive_open_id,order_id FROM user_chat_list WHERE send_open_id = ? OR receive_open_id =? limit ?,8`
-            const poolResult1 = await transformPoolQuery(sql1, [openid, openid,startIndex])
+            const sql1 = `SELECT chat_one_open_id,chat_two_open_id,order_id FROM user_chat_list WHERE chat_one_open_id = ? OR chat_two_open_id =? limit ?,8`
+            const poolResult1 = await transformPoolQuery(sql1, [openid, openid, startIndex])
             if (poolResult1.length > 0) {
                 await new Promise((resolve, reject) => {
                     poolResult1.map(async (data, index) => {
-                        const { receive_open_id, order_id } = data
+                        const chatOneOpenId = data.chat_one_open_id
+                        const chatTwoOpenId = data.chat_two_open_id
+                        const orderId = data.order_id
+                        let avatarUrl = ''
+                        let nickName = ''
+                        let otherOpenId = ''
+                        if (openid === chatOneOpenId) {
+                            otherOpenId = chatTwoOpenId
+                        } else if (openid === chatTwoOpenId) {
+                            otherOpenId = chatOneOpenId
+                        }
                         const sql2 = `SELECT avatar_url,nick_name FROM user_info WHERE open_id = ?`
-                        const poolResult2 = await transformPoolQuery(sql2, [receive_open_id])
+                        const poolResult2 = await transformPoolQuery(sql2, [otherOpenId])
                         if (poolResult2.length === 1) {
-                            const avatarUrl = poolResult2[0].avatar_url
-                            const nickName = poolResult2[0].nick_name
+                            avatarUrl = poolResult2[0].avatar_url
+                            nickName = poolResult2[0].nick_name
                             const sql3 = `SELECT pics_location FROM goods WHERE order_id = ?`
-                            const poolResult3 = await transformPoolQuery(sql3, [order_id])
+                            const poolResult3 = await transformPoolQuery(sql3, [orderId])
                             if (poolResult3.length === 1) {
-                                let topPicSrc=''
-                                let lastChatContent=''
+                                let topPicSrc = ''
+                                let lastChatContent = ''
                                 let lastChatTime = ''
                                 const len = poolResult3[0].pics_location.length
                                 if (len === 0) {
@@ -1552,14 +1570,35 @@ const getChatList = async (ctx, next: () => Promise<any>) => {
                                 } else {
                                     topPicSrc = 'https://' + poolResult3[0].pics_location.split(';')[0]
                                 }
-                                const sql4 =`SELECT chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND order_id = ? ORDER BY chat_time DESC LIMIT 1 `
-                                const poolResult4 = await transformPoolQuery(sql4, [openid,openid,])
+                                const sql4 = `SELECT chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND order_id = ? ORDER BY chat_time DESC LIMIT 1 `
+                                const poolResult4 = await transformPoolQuery(sql4, [chatOneOpenId, chatTwoOpenId, chatTwoOpenId, chatOneOpenId,orderId])
+                                if(poolResult4.length===1){
+                                     lastChatContent = poolResult4[0].content
+                                     lastChatTime = poolResult4[0].chat_time
+                                }
+                                returnDatas.push({
+                                    avatarUrl,
+                                    nickName,
+                                    topPicSrc,
+                                    lastChatContent,
+                                    lastChatTime,
+                                    orderId
+                                })
+                                if(returnDatas.length === poolResult1.length){
+                                    resolve()
+                                }
                             }
                         }
                     })
+                }).then(()=>{
+                    console.log("/getchatlist:查询聊天列表成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                        returnDatas: returnDatas
+                    }
                 })
             }
-
         } catch (err) {
             console.log('/getchatlist:数据库操作失败！', err)
             ctx.response.status = statusCodeList.fail

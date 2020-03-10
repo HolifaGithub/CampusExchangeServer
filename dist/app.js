@@ -3063,9 +3063,9 @@ function () {
             }
 
             myAvatarUrl = poolResult4[0].avatar_url;
-            sql5 = "SELECT * FROM user_chat_list WHERE send_open_id = ? AND receive_open_id = ? AND order_id = ?";
+            sql5 = "SELECT * FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?";
             _context28.next = 47;
-            return (0, _transformPoolQuery["default"])(sql5, [openid, chatOpenId, orderId]);
+            return (0, _transformPoolQuery["default"])(sql5, [openid, chatOpenId, chatOpenId, openid, orderId]);
 
           case 47:
             poolResult5 = _context28.sent;
@@ -3075,7 +3075,7 @@ function () {
               break;
             }
 
-            sql6 = "INSERT INTO user_chat_list(send_open_id,receive_open_id,order_id) VALUES (?,?,?)";
+            sql6 = "INSERT INTO user_chat_list(chat_one_open_id,chat_two_open_id,order_id) VALUES (?,?,?)";
             _context28.next = 52;
             return (0, _transformPoolQuery["default"])(sql6, [openid, chatOpenId, orderId]);
 
@@ -3242,48 +3242,176 @@ var getChatList =
 function () {
   var _ref30 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
-  _regenerator["default"].mark(function _callee30(ctx, next) {
-    var code, result, openid, sql1;
-    return _regenerator["default"].wrap(function _callee30$(_context30) {
+  _regenerator["default"].mark(function _callee31(ctx, next) {
+    var _ctx$request$query9, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1;
+
+    return _regenerator["default"].wrap(function _callee31$(_context31) {
       while (1) {
-        switch (_context30.prev = _context30.next) {
+        switch (_context31.prev = _context31.next) {
           case 0:
-            code = ctx.request.query.code;
+            _ctx$request$query9 = ctx.request.query, code = _ctx$request$query9.code, page = _ctx$request$query9.page;
+            startIndex = (page - 1) * 8;
+            returnDatas = [];
 
             if (!code) {
-              _context30.next = 9;
+              _context31.next = 25;
               break;
             }
 
-            _context30.next = 4;
+            _context31.next = 6;
             return (0, _getOpenIdAndSessionKey["default"])(code);
 
-          case 4:
-            result = _context30.sent;
+          case 6:
+            result = _context31.sent;
             openid = result.openid;
+            _context31.prev = 8;
+            sql1 = "SELECT chat_one_open_id,chat_two_open_id,order_id FROM user_chat_list WHERE chat_one_open_id = ? OR chat_two_open_id =? limit ?,8";
+            _context31.next = 12;
+            return (0, _transformPoolQuery["default"])(sql1, [openid, openid, startIndex]);
 
-            try {
-              sql1 = "SELECT ";
-            } catch (err) {
-              console.log('/getchatlist:数据库操作失败！', err);
-              ctx.response.status = _userStatus.statusCodeList.fail;
-              ctx.response.body = '/getchatlist:数据库操作失败！';
+          case 12:
+            poolResult1 = _context31.sent;
+
+            if (!(poolResult1.length > 0)) {
+              _context31.next = 16;
+              break;
             }
 
-            _context30.next = 12;
+            _context31.next = 16;
+            return new Promise(function (resolve, reject) {
+              poolResult1.map(
+              /*#__PURE__*/
+              function () {
+                var _ref31 = (0, _asyncToGenerator2["default"])(
+                /*#__PURE__*/
+                _regenerator["default"].mark(function _callee30(data, index) {
+                  var chatOneOpenId, chatTwoOpenId, orderId, avatarUrl, nickName, otherOpenId, sql2, poolResult2, sql3, poolResult3, topPicSrc, lastChatContent, lastChatTime, len, sql4, poolResult4;
+                  return _regenerator["default"].wrap(function _callee30$(_context30) {
+                    while (1) {
+                      switch (_context30.prev = _context30.next) {
+                        case 0:
+                          chatOneOpenId = data.chat_one_open_id;
+                          chatTwoOpenId = data.chat_two_open_id;
+                          orderId = data.order_id;
+                          avatarUrl = '';
+                          nickName = '';
+                          otherOpenId = '';
+
+                          if (openid === chatOneOpenId) {
+                            otherOpenId = chatTwoOpenId;
+                          } else if (openid === chatTwoOpenId) {
+                            otherOpenId = chatOneOpenId;
+                          }
+
+                          sql2 = "SELECT avatar_url,nick_name FROM user_info WHERE open_id = ?";
+                          _context30.next = 10;
+                          return (0, _transformPoolQuery["default"])(sql2, [otherOpenId]);
+
+                        case 10:
+                          poolResult2 = _context30.sent;
+
+                          if (!(poolResult2.length === 1)) {
+                            _context30.next = 31;
+                            break;
+                          }
+
+                          avatarUrl = poolResult2[0].avatar_url;
+                          nickName = poolResult2[0].nick_name;
+                          sql3 = "SELECT pics_location FROM goods WHERE order_id = ?";
+                          _context30.next = 17;
+                          return (0, _transformPoolQuery["default"])(sql3, [orderId]);
+
+                        case 17:
+                          poolResult3 = _context30.sent;
+
+                          if (!(poolResult3.length === 1)) {
+                            _context30.next = 31;
+                            break;
+                          }
+
+                          topPicSrc = '';
+                          lastChatContent = '';
+                          lastChatTime = '';
+                          len = poolResult3[0].pics_location.length;
+
+                          if (len === 0) {
+                            topPicSrc = '';
+                          } else {
+                            topPicSrc = 'https://' + poolResult3[0].pics_location.split(';')[0];
+                          }
+
+                          sql4 = "SELECT chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND order_id = ? ORDER BY chat_time DESC LIMIT 1 ";
+                          _context30.next = 27;
+                          return (0, _transformPoolQuery["default"])(sql4, [chatOneOpenId, chatTwoOpenId, chatTwoOpenId, chatOneOpenId, orderId]);
+
+                        case 27:
+                          poolResult4 = _context30.sent;
+
+                          if (poolResult4.length === 1) {
+                            lastChatContent = poolResult4[0].content;
+                            lastChatTime = poolResult4[0].chat_time;
+                          }
+
+                          returnDatas.push({
+                            avatarUrl: avatarUrl,
+                            nickName: nickName,
+                            topPicSrc: topPicSrc,
+                            lastChatContent: lastChatContent,
+                            lastChatTime: lastChatTime,
+                            orderId: orderId
+                          });
+
+                          if (returnDatas.length === poolResult1.length) {
+                            resolve();
+                          }
+
+                        case 31:
+                        case "end":
+                          return _context30.stop();
+                      }
+                    }
+                  }, _callee30);
+                }));
+
+                return function (_x55, _x56) {
+                  return _ref31.apply(this, arguments);
+                };
+              }());
+            }).then(function () {
+              console.log("/getchatlist:查询聊天列表成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            });
+
+          case 16:
+            _context31.next = 23;
             break;
 
-          case 9:
+          case 18:
+            _context31.prev = 18;
+            _context31.t0 = _context31["catch"](8);
+            console.log('/getchatlist:数据库操作失败！', _context31.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getchatlist:数据库操作失败！';
+
+          case 23:
+            _context31.next = 28;
+            break;
+
+          case 25:
             console.log('/getchatlist:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatlist:您请求的用户code有误!';
 
-          case 12:
+          case 28:
           case "end":
-            return _context30.stop();
+            return _context31.stop();
         }
       }
-    }, _callee30);
+    }, _callee31, null, [[8, 18]]);
   }));
 
   return function getChatList(_x53, _x54) {
