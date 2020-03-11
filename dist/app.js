@@ -2916,16 +2916,16 @@ function () {
   var _ref28 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee28(ctx, next) {
-    var _ctx$request$query8, code, orderId, getChatInfoStartTime, result, openid, sql1, poolResult1, _poolResult1$3, open_id, pay_for_me_price, pay_for_other_price, goods_number, new_and_old_degree, want_exchange_goods, name_input, pics_location, chatOpenId, topPicSrc, len, goodsInfo, chatInfo, sql2, poolResult2, i, sendOpenId, chatTime, content, type, _sql11, _poolResult11, _i, _sendOpenId, _chatTime, _content, _type, sql3, poolResult3, chatNickName, chatAvatarUrl, sql4, poolResult4, myAvatarUrl, sql5, poolResult5, sql6, poolResult6;
+    var _ctx$request$query8, code, orderId, getChatInfoStartTime, otherOpenId, result, openid, sql1, poolResult1, _poolResult1$3, open_id, pay_for_me_price, pay_for_other_price, goods_number, new_and_old_degree, want_exchange_goods, name_input, pics_location, topPicSrc, len, goodsInfo, chatInfo, chooseOtherOpenId, sql2, poolResult2, i, sendOpenId, chatTime, content, type, _sql11, _poolResult11, _i, _sendOpenId, _chatTime, _content, _type, sql3, poolResult3, chatNickName, chatAvatarUrl, sql4, poolResult4, myAvatarUrl, sql5, poolResult5, sql6, poolResult6;
 
     return _regenerator["default"].wrap(function _callee28$(_context28) {
       while (1) {
         switch (_context28.prev = _context28.next) {
           case 0:
-            _ctx$request$query8 = ctx.request.query, code = _ctx$request$query8.code, orderId = _ctx$request$query8.orderId, getChatInfoStartTime = _ctx$request$query8.getChatInfoStartTime;
+            _ctx$request$query8 = ctx.request.query, code = _ctx$request$query8.code, orderId = _ctx$request$query8.orderId, getChatInfoStartTime = _ctx$request$query8.getChatInfoStartTime, otherOpenId = _ctx$request$query8.otherOpenId;
 
             if (!code) {
-              _context28.next = 65;
+              _context28.next = 66;
               break;
             }
 
@@ -2944,12 +2944,11 @@ function () {
             poolResult1 = _context28.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context28.next = 56;
+              _context28.next = 57;
               break;
             }
 
             _poolResult1$3 = poolResult1[0], open_id = _poolResult1$3.open_id, pay_for_me_price = _poolResult1$3.pay_for_me_price, pay_for_other_price = _poolResult1$3.pay_for_other_price, goods_number = _poolResult1$3.goods_number, new_and_old_degree = _poolResult1$3.new_and_old_degree, want_exchange_goods = _poolResult1$3.want_exchange_goods, name_input = _poolResult1$3.name_input, pics_location = _poolResult1$3.pics_location;
-            chatOpenId = open_id;
             len = pics_location.split(';').length;
 
             if (len === 0) {
@@ -2969,17 +2968,24 @@ function () {
               orderId: orderId
             };
             chatInfo = [];
+            chooseOtherOpenId = '';
+
+            if (orderId && otherOpenId === 'undefined') {
+              chooseOtherOpenId = open_id;
+            } else if (orderId && otherOpenId !== 'undefined') {
+              chooseOtherOpenId = otherOpenId;
+            }
 
             if (!(getChatInfoStartTime && getChatInfoStartTime.length > 0)) {
-              _context28.next = 26;
+              _context28.next = 27;
               break;
             }
 
             sql2 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND chat_time > ? ORDER BY chat_time ASC ";
-            _context28.next = 22;
-            return (0, _transformPoolQuery["default"])(sql2, [openid, chatOpenId, chatOpenId, openid, getChatInfoStartTime]);
+            _context28.next = 23;
+            return (0, _transformPoolQuery["default"])(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, getChatInfoStartTime]);
 
-          case 22:
+          case 23:
             poolResult2 = _context28.sent;
 
             if (poolResult2.length > 0) {
@@ -2991,7 +2997,7 @@ function () {
 
                 if (sendOpenId === openid) {
                   type = 0;
-                } else if (sendOpenId === chatOpenId) {
+                } else if (sendOpenId === chooseOtherOpenId) {
                   type = 1;
                 }
 
@@ -3003,15 +3009,15 @@ function () {
               }
             }
 
-            _context28.next = 31;
+            _context28.next = 32;
             break;
 
-          case 26:
-            _sql11 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) \n                    ORDER BY chat_time ASC ";
-            _context28.next = 29;
-            return (0, _transformPoolQuery["default"])(_sql11, [openid, chatOpenId, chatOpenId, openid]);
+          case 27:
+            _sql11 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) ORDER BY chat_time ASC ";
+            _context28.next = 30;
+            return (0, _transformPoolQuery["default"])(_sql11, [openid, chooseOtherOpenId, chooseOtherOpenId, openid]);
 
-          case 29:
+          case 30:
             _poolResult11 = _context28.sent;
 
             if (_poolResult11.length > 0) {
@@ -3023,7 +3029,7 @@ function () {
 
                 if (_sendOpenId === openid) {
                   _type = 0;
-                } else if (_sendOpenId === chatOpenId) {
+                } else if (_sendOpenId === chooseOtherOpenId) {
                   _type = 1;
                 }
 
@@ -3035,54 +3041,54 @@ function () {
               }
             }
 
-          case 31:
+          case 32:
             sql3 = "SELECT nick_name,avatar_url FROM user_info WHERE open_id = ?";
-            _context28.next = 34;
-            return (0, _transformPoolQuery["default"])(sql3, [chatOpenId]);
+            _context28.next = 35;
+            return (0, _transformPoolQuery["default"])(sql3, [chooseOtherOpenId]);
 
-          case 34:
+          case 35:
             poolResult3 = _context28.sent;
 
             if (!(poolResult3.length === 1)) {
-              _context28.next = 56;
+              _context28.next = 57;
               break;
             }
 
             chatNickName = poolResult3[0].nick_name;
             chatAvatarUrl = poolResult3[0].avatar_url;
             sql4 = "SELECT avatar_url FROM user_info WHERE open_id = ?";
-            _context28.next = 41;
+            _context28.next = 42;
             return (0, _transformPoolQuery["default"])(sql4, [openid]);
 
-          case 41:
+          case 42:
             poolResult4 = _context28.sent;
 
             if (!(poolResult4.length === 1)) {
-              _context28.next = 56;
+              _context28.next = 57;
               break;
             }
 
             myAvatarUrl = poolResult4[0].avatar_url;
             sql5 = "SELECT * FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?";
-            _context28.next = 47;
-            return (0, _transformPoolQuery["default"])(sql5, [openid, chatOpenId, chatOpenId, openid, orderId]);
+            _context28.next = 48;
+            return (0, _transformPoolQuery["default"])(sql5, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId]);
 
-          case 47:
+          case 48:
             poolResult5 = _context28.sent;
 
             if (!(poolResult5.length === 0)) {
-              _context28.next = 53;
+              _context28.next = 54;
               break;
             }
 
             sql6 = "INSERT INTO user_chat_list(chat_one_open_id,chat_two_open_id,order_id) VALUES (?,?,?)";
-            _context28.next = 52;
-            return (0, _transformPoolQuery["default"])(sql6, [openid, chatOpenId, orderId]);
-
-          case 52:
-            poolResult6 = _context28.sent;
+            _context28.next = 53;
+            return (0, _transformPoolQuery["default"])(sql6, [openid, chooseOtherOpenId, orderId]);
 
           case 53:
+            poolResult6 = _context28.sent;
+
+          case 54:
             console.log('/getchatinfo:获取聊天内容页数据成功');
             ctx.response.status = _userStatus.statusCodeList.success;
             ctx.response.body = {
@@ -3094,32 +3100,32 @@ function () {
               myAvatarUrl: myAvatarUrl
             };
 
-          case 56:
-            _context28.next = 63;
+          case 57:
+            _context28.next = 64;
             break;
 
-          case 58:
-            _context28.prev = 58;
+          case 59:
+            _context28.prev = 59;
             _context28.t0 = _context28["catch"](6);
             console.log('/getchatinfo:数据库操作失败！', _context28.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:数据库操作失败！';
 
-          case 63:
-            _context28.next = 68;
+          case 64:
+            _context28.next = 69;
             break;
 
-          case 65:
+          case 66:
             console.log('/getchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:您请求的用户code有误!';
 
-          case 68:
+          case 69:
           case "end":
             return _context28.stop();
         }
       }
-    }, _callee28, null, [[6, 58]]);
+    }, _callee28, null, [[6, 59]]);
   }));
 
   return function getChatInfo(_x49, _x50) {
@@ -3133,16 +3139,16 @@ function () {
   var _ref29 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee29(ctx, next) {
-    var _ctx$request$body6, code, orderId, value, result, openid, sql1, poolResult1, receiveOpenId, sql2, poolResult2;
+    var _ctx$request$body6, code, orderId, value, otherOpenId, result, openid, sql1, poolResult1, receiveOpenId, chooseOtherOpenId, sql2, poolResult2;
 
     return _regenerator["default"].wrap(function _callee29$(_context29) {
       while (1) {
         switch (_context29.prev = _context29.next) {
           case 0:
-            _ctx$request$body6 = ctx.request.body, code = _ctx$request$body6.code, orderId = _ctx$request$body6.orderId, value = _ctx$request$body6.value;
+            _ctx$request$body6 = ctx.request.body, code = _ctx$request$body6.code, orderId = _ctx$request$body6.orderId, value = _ctx$request$body6.value, otherOpenId = _ctx$request$body6.otherOpenId;
 
             if (!code) {
-              _context29.next = 27;
+              _context29.next = 29;
               break;
             }
 
@@ -3161,28 +3167,36 @@ function () {
             poolResult1 = _context29.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context29.next = 18;
+              _context29.next = 20;
               break;
             }
 
             receiveOpenId = poolResult1[0].open_id;
-            sql2 = 'INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )';
-            _context29.next = 16;
-            return (0, _transformPoolQuery["default"])(sql2, [openid, receiveOpenId, orderId, value]);
+            chooseOtherOpenId = '';
 
-          case 16:
+            if (orderId && !otherOpenId) {
+              chooseOtherOpenId = receiveOpenId;
+            } else if (orderId && otherOpenId) {
+              chooseOtherOpenId = otherOpenId;
+            }
+
+            sql2 = 'INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )';
+            _context29.next = 18;
+            return (0, _transformPoolQuery["default"])(sql2, [openid, chooseOtherOpenId, orderId, value]);
+
+          case 18:
             poolResult2 = _context29.sent;
 
             if (poolResult2.affectedRows === 1) {
               wss.clients.forEach(function (client) {
-                if (client.openId === openid || client.openId === receiveOpenId) {
+                if (client.openId === openid || client.openId === chooseOtherOpenId) {
                   var type;
 
                   if (client.openId === openid) {
                     type = 0;
                   }
 
-                  if (client.openId === receiveOpenId) {
+                  if (client.openId === chooseOtherOpenId) {
                     type = 1;
                   }
 
@@ -3204,32 +3218,32 @@ function () {
               };
             }
 
-          case 18:
-            _context29.next = 25;
+          case 20:
+            _context29.next = 27;
             break;
 
-          case 20:
-            _context29.prev = 20;
+          case 22:
+            _context29.prev = 22;
             _context29.t0 = _context29["catch"](6);
             console.log('/sendchatinfo:数据库操作失败！', _context29.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/sendchatinfo:数据库操作失败！';
 
-          case 25:
-            _context29.next = 30;
+          case 27:
+            _context29.next = 32;
             break;
 
-          case 27:
+          case 29:
             console.log('/sendchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/sendchatinfo:您请求的用户code有误!';
 
-          case 30:
+          case 32:
           case "end":
             return _context29.stop();
         }
       }
-    }, _callee29, null, [[6, 20]]);
+    }, _callee29, null, [[6, 22]]);
   }));
 
   return function sendChatInfo(_x51, _x52) {
@@ -3358,7 +3372,8 @@ function () {
                             topPicSrc: topPicSrc,
                             lastChatContent: lastChatContent,
                             lastChatTime: lastChatTime,
-                            orderId: orderId
+                            orderId: orderId,
+                            otherOpenId: otherOpenId
                           });
 
                           if (returnDatas.length === poolResult1.length) {
