@@ -1391,8 +1391,8 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                     chooseOtherOpenId=otherOpenId
                 }
                 if (getChatInfoStartTime && getChatInfoStartTime.length > 0) {
-                    const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND chat_time > ? ORDER BY chat_time ASC `
-                    const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, getChatInfoStartTime])
+                    const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND chat_time > ? AND order_id = ? ORDER BY chat_time ASC `
+                    const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid,orderId, getChatInfoStartTime])
                     if (poolResult2.length > 0) {
                         for (let i = 0; i < poolResult2.length; i++) {
                             let sendOpenId = poolResult2[i].send_open_id
@@ -1412,8 +1412,8 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                         }
                     }
                 } else {
-                    const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) ORDER BY chat_time ASC `
-                    const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid])
+                    const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? ))  AND order_id = ? ORDER BY chat_time ASC `
+                    const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid,orderId])
                     if (poolResult2.length > 0) {
                         for (let i = 0; i < poolResult2.length; i++) {
                             let sendOpenId = poolResult2[i].send_open_id
@@ -1475,6 +1475,7 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
 
 const sendChatInfo = async (ctx, next: () => Promise<any>) => {
     const { code, orderId, value,otherOpenId } = ctx.request.body
+    let isWarn =false
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
@@ -1489,25 +1490,40 @@ const sendChatInfo = async (ctx, next: () => Promise<any>) => {
                 }else if (orderId&&otherOpenId){
                     chooseOtherOpenId=otherOpenId
                 }
+                const reg =new RegExp('cao|操|草|艹|((sha|傻|煞|s)(B|逼))|(垃圾|lj|辣鸡)|(gun|滚)|尼玛|弱智|sjb|神经病|废物|feiwu','ig')
+                const checkedValue = value.replace(reg,(keyWord)=>{
+                    const len =keyWord.length
+                    let  str =''
+                    for(let i =0;i<len;i++){
+                        str +='*'
+                    }
+                    isWarn=true
+                    return str
+                })
                 const sql2 = 'INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )'
-                const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, orderId, value])
+                const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, orderId, checkedValue])
                 if (poolResult2.affectedRows === 1) {
                     wss.clients.forEach((client) => {
-                        if (client.openId === openid || client.openId === chooseOtherOpenId) {
-                            let type
-                            if (client.openId === openid) {
-                                type = 0
-                            }
-                            if (client.openId === chooseOtherOpenId) {
-                                type = 1
-                            }
-                            const chatTime = new Date()
+                        const chatTime = new Date()
+                        if (client.openId === openid) {                       
                             client.send(JSON.stringify({
                                 status: statusList.success,
                                 chatInfo: [{
-                                    type,
+                                    type:0,
                                     chatTime,
-                                    content: value
+                                    content: checkedValue,
+                                    isWarn:isWarn
+                                }]
+                            }))
+                        }
+                        if(client.openId === chooseOtherOpenId){
+                            client.send(JSON.stringify({
+                                status: statusList.success,
+                                chatInfo: [{
+                                    type:1,
+                                    chatTime,
+                                    content: checkedValue,
+                                    isWarn:false
                                 }]
                             }))
                         }
