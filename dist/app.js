@@ -3139,35 +3139,36 @@ function () {
   var _ref29 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee29(ctx, next) {
-    var _ctx$request$body6, code, orderId, value, otherOpenId, result, openid, sql1, poolResult1, receiveOpenId, chooseOtherOpenId, reg, checkedValue, sql2, poolResult2;
+    var _ctx$request$body6, code, orderId, value, otherOpenId, isWarn, result, openid, sql1, poolResult1, receiveOpenId, chooseOtherOpenId, reg, checkedValue, sql2, poolResult2, sql3, poolResult3, id;
 
     return _regenerator["default"].wrap(function _callee29$(_context29) {
       while (1) {
         switch (_context29.prev = _context29.next) {
           case 0:
             _ctx$request$body6 = ctx.request.body, code = _ctx$request$body6.code, orderId = _ctx$request$body6.orderId, value = _ctx$request$body6.value, otherOpenId = _ctx$request$body6.otherOpenId;
+            isWarn = false;
 
             if (!code) {
-              _context29.next = 31;
+              _context29.next = 37;
               break;
             }
 
-            _context29.next = 4;
+            _context29.next = 5;
             return (0, _getOpenIdAndSessionKey["default"])(code);
 
-          case 4:
+          case 5:
             result = _context29.sent;
             openid = result.openid;
-            _context29.prev = 6;
+            _context29.prev = 7;
             sql1 = "SELECT open_id FROM goods WHERE order_id = ?";
-            _context29.next = 10;
+            _context29.next = 11;
             return (0, _transformPoolQuery["default"])(sql1, [orderId]);
 
-          case 10:
+          case 11:
             poolResult1 = _context29.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context29.next = 22;
+              _context29.next = 28;
               break;
             }
 
@@ -3189,35 +3190,55 @@ function () {
                 str += '*';
               }
 
+              isWarn = true;
               return str;
             });
             sql2 = 'INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )';
-            _context29.next = 20;
+            _context29.next = 21;
             return (0, _transformPoolQuery["default"])(sql2, [openid, chooseOtherOpenId, orderId, checkedValue]);
 
-          case 20:
+          case 21:
             poolResult2 = _context29.sent;
 
-            if (poolResult2.affectedRows === 1) {
+            if (!(poolResult2.affectedRows === 1)) {
+              _context29.next = 28;
+              break;
+            }
+
+            sql3 = "SELECT id FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?";
+            _context29.next = 26;
+            return (0, _transformPoolQuery["default"])(sql3, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId]);
+
+          case 26:
+            poolResult3 = _context29.sent;
+
+            if (poolResult3.length == 1) {
+              id = poolResult3[0].id;
               wss.clients.forEach(function (client) {
-                if (client.openId === openid || client.openId === chooseOtherOpenId) {
-                  var type;
+                var chatTime = new Date();
 
-                  if (client.openId === openid) {
-                    type = 0;
-                  }
-
-                  if (client.openId === chooseOtherOpenId) {
-                    type = 1;
-                  }
-
-                  var chatTime = new Date();
+                if (client.openId === openid) {
                   client.send(JSON.stringify({
                     status: _userStatus.statusList.success,
                     chatInfo: [{
-                      type: type,
+                      type: 0,
                       chatTime: chatTime,
-                      content: checkedValue
+                      content: checkedValue,
+                      isWarn: isWarn,
+                      id: id
+                    }]
+                  }));
+                }
+
+                if (client.openId === chooseOtherOpenId) {
+                  client.send(JSON.stringify({
+                    status: _userStatus.statusList.success,
+                    chatInfo: [{
+                      type: 1,
+                      chatTime: chatTime,
+                      content: checkedValue,
+                      isWarn: false,
+                      id: id
                     }]
                   }));
                 }
@@ -3229,32 +3250,32 @@ function () {
               };
             }
 
-          case 22:
-            _context29.next = 29;
+          case 28:
+            _context29.next = 35;
             break;
 
-          case 24:
-            _context29.prev = 24;
-            _context29.t0 = _context29["catch"](6);
+          case 30:
+            _context29.prev = 30;
+            _context29.t0 = _context29["catch"](7);
             console.log('/sendchatinfo:数据库操作失败！', _context29.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/sendchatinfo:数据库操作失败！';
 
-          case 29:
-            _context29.next = 34;
+          case 35:
+            _context29.next = 40;
             break;
 
-          case 31:
+          case 37:
             console.log('/sendchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/sendchatinfo:您请求的用户code有误!';
 
-          case 34:
+          case 40:
           case "end":
             return _context29.stop();
         }
       }
-    }, _callee29, null, [[6, 24]]);
+    }, _callee29, null, [[7, 30]]);
   }));
 
   return function sendChatInfo(_x51, _x52) {
@@ -3290,7 +3311,7 @@ function () {
             result = _context31.sent;
             openid = result.openid;
             _context31.prev = 8;
-            sql1 = "SELECT chat_one_open_id,chat_two_open_id,order_id FROM user_chat_list WHERE chat_one_open_id = ? OR chat_two_open_id =? limit ?,8";
+            sql1 = "SELECT chat_one_open_id,chat_two_open_id,order_id,id FROM user_chat_list WHERE chat_one_open_id = ? OR chat_two_open_id =? limit ?,8";
             _context31.next = 12;
             return (0, _transformPoolQuery["default"])(sql1, [openid, openid, startIndex]);
 
@@ -3310,7 +3331,7 @@ function () {
                 var _ref31 = (0, _asyncToGenerator2["default"])(
                 /*#__PURE__*/
                 _regenerator["default"].mark(function _callee30(data, index) {
-                  var chatOneOpenId, chatTwoOpenId, orderId, avatarUrl, nickName, otherOpenId, sql2, poolResult2, sql3, poolResult3, topPicSrc, lastChatContent, lastChatTime, len, sql4, poolResult4;
+                  var chatOneOpenId, chatTwoOpenId, orderId, id, avatarUrl, nickName, otherOpenId, sql2, poolResult2, sql3, poolResult3, topPicSrc, lastChatContent, lastChatTime, len, sql4, poolResult4;
                   return _regenerator["default"].wrap(function _callee30$(_context30) {
                     while (1) {
                       switch (_context30.prev = _context30.next) {
@@ -3318,6 +3339,7 @@ function () {
                           chatOneOpenId = data.chat_one_open_id;
                           chatTwoOpenId = data.chat_two_open_id;
                           orderId = data.order_id;
+                          id = data.id;
                           avatarUrl = '';
                           nickName = '';
                           otherOpenId = '';
@@ -3329,28 +3351,28 @@ function () {
                           }
 
                           sql2 = "SELECT avatar_url,nick_name FROM user_info WHERE open_id = ?";
-                          _context30.next = 10;
+                          _context30.next = 11;
                           return (0, _transformPoolQuery["default"])(sql2, [otherOpenId]);
 
-                        case 10:
+                        case 11:
                           poolResult2 = _context30.sent;
 
                           if (!(poolResult2.length === 1)) {
-                            _context30.next = 31;
+                            _context30.next = 32;
                             break;
                           }
 
                           avatarUrl = poolResult2[0].avatar_url;
                           nickName = poolResult2[0].nick_name;
                           sql3 = "SELECT pics_location FROM goods WHERE order_id = ?";
-                          _context30.next = 17;
+                          _context30.next = 18;
                           return (0, _transformPoolQuery["default"])(sql3, [orderId]);
 
-                        case 17:
+                        case 18:
                           poolResult3 = _context30.sent;
 
                           if (!(poolResult3.length === 1)) {
-                            _context30.next = 31;
+                            _context30.next = 32;
                             break;
                           }
 
@@ -3366,10 +3388,10 @@ function () {
                           }
 
                           sql4 = "SELECT chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND order_id = ? ORDER BY chat_time DESC LIMIT 1 ";
-                          _context30.next = 27;
+                          _context30.next = 28;
                           return (0, _transformPoolQuery["default"])(sql4, [chatOneOpenId, chatTwoOpenId, chatTwoOpenId, chatOneOpenId, orderId]);
 
-                        case 27:
+                        case 28:
                           poolResult4 = _context30.sent;
 
                           if (poolResult4.length === 1) {
@@ -3384,14 +3406,15 @@ function () {
                             lastChatContent: lastChatContent,
                             lastChatTime: lastChatTime,
                             orderId: orderId,
-                            otherOpenId: otherOpenId
+                            otherOpenId: otherOpenId,
+                            id: id
                           });
 
                           if (returnDatas.length === poolResult1.length) {
                             resolve();
                           }
 
-                        case 31:
+                        case 32:
                         case "end":
                           return _context30.stop();
                       }

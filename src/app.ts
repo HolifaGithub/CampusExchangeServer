@@ -1503,35 +1503,42 @@ const sendChatInfo = async (ctx, next: () => Promise<any>) => {
                 const sql2 = 'INSERT INTO user_chat(send_open_id,receive_open_id,order_id,chat_time,content) VALUES (?,?,?,now() , ? )'
                 const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, orderId, checkedValue])
                 if (poolResult2.affectedRows === 1) {
-                    wss.clients.forEach((client) => {
-                        const chatTime = new Date()
-                        if (client.openId === openid) {                       
-                            client.send(JSON.stringify({
-                                status: statusList.success,
-                                chatInfo: [{
-                                    type:0,
-                                    chatTime,
-                                    content: checkedValue,
-                                    isWarn:isWarn
-                                }]
-                            }))
+                    const sql3 = `SELECT id FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?`
+                    const poolResult3 = await transformPoolQuery(sql3, [openid, chooseOtherOpenId,chooseOtherOpenId,openid, orderId])
+                    if(poolResult3.length==1){
+                        const id =poolResult3[0].id
+                        wss.clients.forEach((client) => {
+                            const chatTime = new Date()
+                            if (client.openId === openid) {                       
+                                client.send(JSON.stringify({
+                                    status: statusList.success,
+                                    chatInfo: [{
+                                        type:0,
+                                        chatTime,
+                                        content: checkedValue,
+                                        isWarn:isWarn,
+                                        id
+                                    }]
+                                }))
+                            }
+                            if(client.openId === chooseOtherOpenId){
+                                client.send(JSON.stringify({
+                                    status: statusList.success,
+                                    chatInfo: [{
+                                        type:1,
+                                        chatTime,
+                                        content: checkedValue,
+                                        isWarn:false,
+                                        id
+                                    }]
+                                }))
+                            }
+                        })
+                        console.log('/sendchatinfo:发送聊天信息成功!')
+                        ctx.response.status = statusCodeList.success
+                        ctx.response.body = {
+                            status: statusList.success,
                         }
-                        if(client.openId === chooseOtherOpenId){
-                            client.send(JSON.stringify({
-                                status: statusList.success,
-                                chatInfo: [{
-                                    type:1,
-                                    chatTime,
-                                    content: checkedValue,
-                                    isWarn:false
-                                }]
-                            }))
-                        }
-                    })
-                    console.log('/sendchatinfo:发送聊天信息成功!')
-                    ctx.response.status = statusCodeList.success
-                    ctx.response.body = {
-                        status: statusList.success,
                     }
                 }
             }
@@ -1555,6 +1562,7 @@ interface ChatListReturnDatas{
     lastChatTime:string;
     orderId:string;
     otherOpenId:string;
+    id:number;
 }
 const getChatList = async (ctx, next: () => Promise<any>) => {
     const { code, page } = ctx.request.query
@@ -1564,7 +1572,7 @@ const getChatList = async (ctx, next: () => Promise<any>) => {
         const result = await getOpenIdAndSessionKey(code)
         const { openid } = result
         try {
-            const sql1 = `SELECT chat_one_open_id,chat_two_open_id,order_id FROM user_chat_list WHERE chat_one_open_id = ? OR chat_two_open_id =? limit ?,8`
+            const sql1 = `SELECT chat_one_open_id,chat_two_open_id,order_id,id FROM user_chat_list WHERE chat_one_open_id = ? OR chat_two_open_id =? limit ?,8`
             const poolResult1 = await transformPoolQuery(sql1, [openid, openid, startIndex])
             if (poolResult1.length > 0) {
                 await new Promise((resolve, reject) => {
@@ -1572,6 +1580,7 @@ const getChatList = async (ctx, next: () => Promise<any>) => {
                         const chatOneOpenId = data.chat_one_open_id
                         const chatTwoOpenId = data.chat_two_open_id
                         const orderId = data.order_id
+                        const id = data.id
                         let avatarUrl = ''
                         let nickName = ''
                         let otherOpenId = ''
@@ -1610,7 +1619,8 @@ const getChatList = async (ctx, next: () => Promise<any>) => {
                                     lastChatContent,
                                     lastChatTime,
                                     orderId,
-                                    otherOpenId
+                                    otherOpenId,
+                                    id
                                 })
                                 if(returnDatas.length === poolResult1.length){
                                     resolve()
