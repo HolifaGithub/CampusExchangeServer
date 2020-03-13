@@ -523,8 +523,7 @@ const getWaterFall = async (ctx, next: () => Promise<any>) => {
         try {
             const sql1 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE open_id != ? AND order_status = 'released' LIMIT ?,4;`
             const poolResult1 = await transformPoolQuery(sql1, [openid, startIndex])
-            // console.log(poolResult1)
-            if (poolResult1.length > 0) {
+            if (poolResult1.length > 1) {
                 if (poolResult1.length % 2 !== 0) {
                     poolResult1.pop()
                 }

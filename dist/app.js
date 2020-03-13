@@ -1070,7 +1070,7 @@ function () {
           case 12:
             poolResult1 = _context11.sent;
 
-            if (!(poolResult1.length > 0)) {
+            if (!(poolResult1.length > 1)) {
               _context11.next = 19;
               break;
             }
