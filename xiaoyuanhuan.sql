@@ -93,7 +93,9 @@ CREATE TABLE user_chat_list(
      id INT(20) PRIMARY KEY  AUTO_INCREMENT,
      chat_one_open_id VARCHAR(30) NOT NULL,
      chat_two_open_id VARCHAR(30) NOT NULL,
-     order_id VARCHAR(30) NOT NULL
+     order_id VARCHAR(30) NOT NULL,
+     not_view_message_num  Int(50)  DEFAULT 0,
+     not_view_open_id  VARCHAR(30) NOT NULL
 );
 
 
