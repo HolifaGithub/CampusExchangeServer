@@ -1391,7 +1391,7 @@ const getChatInfo = async (ctx, next: () => Promise<any>) => {
                 }
                 if (getChatInfoStartTime && getChatInfoStartTime.length > 0) {
                     const sql2 = `SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND chat_time > ? AND order_id = ? ORDER BY chat_time ASC `
-                    const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId, getChatInfoStartTime])
+                    const poolResult2 = await transformPoolQuery(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, getChatInfoStartTime,orderId])
                     if (poolResult2.length > 0) {
                         for (let i = 0; i < poolResult2.length; i++) {
                             let sendOpenId = poolResult2[i].send_open_id

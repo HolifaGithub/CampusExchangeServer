@@ -2925,7 +2925,7 @@ function () {
             _ctx$request$query8 = ctx.request.query, code = _ctx$request$query8.code, orderId = _ctx$request$query8.orderId, getChatInfoStartTime = _ctx$request$query8.getChatInfoStartTime, otherOpenId = _ctx$request$query8.otherOpenId;
 
             if (!code) {
-              _context28.next = 66;
+              _context28.next = 67;
               break;
             }
 
@@ -2944,7 +2944,7 @@ function () {
             poolResult1 = _context28.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context28.next = 57;
+              _context28.next = 58;
               break;
             }
 
@@ -2977,16 +2977,17 @@ function () {
             }
 
             if (!(getChatInfoStartTime && getChatInfoStartTime.length > 0)) {
-              _context28.next = 27;
+              _context28.next = 28;
               break;
             }
 
             sql2 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? )) AND chat_time > ? AND order_id = ? ORDER BY chat_time ASC ";
             _context28.next = 23;
-            return (0, _transformPoolQuery["default"])(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId, getChatInfoStartTime]);
+            return (0, _transformPoolQuery["default"])(sql2, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, getChatInfoStartTime, orderId]);
 
           case 23:
             poolResult2 = _context28.sent;
+            console.log(poolResult2);
 
             if (poolResult2.length > 0) {
               for (i = 0; i < poolResult2.length; i++) {
@@ -3009,15 +3010,15 @@ function () {
               }
             }
 
-            _context28.next = 32;
+            _context28.next = 33;
             break;
 
-          case 27:
+          case 28:
             _sql11 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? ))  AND order_id = ? ORDER BY chat_time ASC ";
-            _context28.next = 30;
+            _context28.next = 31;
             return (0, _transformPoolQuery["default"])(_sql11, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId]);
 
-          case 30:
+          case 31:
             _poolResult11 = _context28.sent;
 
             if (_poolResult11.length > 0) {
@@ -3041,54 +3042,54 @@ function () {
               }
             }
 
-          case 32:
+          case 33:
             sql3 = "SELECT nick_name,avatar_url FROM user_info WHERE open_id = ?";
-            _context28.next = 35;
+            _context28.next = 36;
             return (0, _transformPoolQuery["default"])(sql3, [chooseOtherOpenId]);
 
-          case 35:
+          case 36:
             poolResult3 = _context28.sent;
 
             if (!(poolResult3.length === 1)) {
-              _context28.next = 57;
+              _context28.next = 58;
               break;
             }
 
             chatNickName = poolResult3[0].nick_name;
             chatAvatarUrl = poolResult3[0].avatar_url;
             sql4 = "SELECT avatar_url FROM user_info WHERE open_id = ?";
-            _context28.next = 42;
+            _context28.next = 43;
             return (0, _transformPoolQuery["default"])(sql4, [openid]);
 
-          case 42:
+          case 43:
             poolResult4 = _context28.sent;
 
             if (!(poolResult4.length === 1)) {
-              _context28.next = 57;
+              _context28.next = 58;
               break;
             }
 
             myAvatarUrl = poolResult4[0].avatar_url;
             sql5 = "SELECT * FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?";
-            _context28.next = 48;
+            _context28.next = 49;
             return (0, _transformPoolQuery["default"])(sql5, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId]);
 
-          case 48:
+          case 49:
             poolResult5 = _context28.sent;
 
             if (!(poolResult5.length === 0)) {
-              _context28.next = 54;
+              _context28.next = 55;
               break;
             }
 
             sql6 = "INSERT INTO user_chat_list(chat_one_open_id,chat_two_open_id,order_id) VALUES (?,?,?)";
-            _context28.next = 53;
+            _context28.next = 54;
             return (0, _transformPoolQuery["default"])(sql6, [openid, chooseOtherOpenId, orderId]);
 
-          case 53:
+          case 54:
             poolResult6 = _context28.sent;
 
-          case 54:
+          case 55:
             console.log('/getchatinfo:获取聊天内容页数据成功');
             ctx.response.status = _userStatus.statusCodeList.success;
             ctx.response.body = {
@@ -3100,32 +3101,32 @@ function () {
               myAvatarUrl: myAvatarUrl
             };
 
-          case 57:
-            _context28.next = 64;
+          case 58:
+            _context28.next = 65;
             break;
 
-          case 59:
-            _context28.prev = 59;
+          case 60:
+            _context28.prev = 60;
             _context28.t0 = _context28["catch"](6);
             console.log('/getchatinfo:数据库操作失败！', _context28.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:数据库操作失败！';
 
-          case 64:
-            _context28.next = 69;
+          case 65:
+            _context28.next = 70;
             break;
 
-          case 66:
+          case 67:
             console.log('/getchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:您请求的用户code有误!';
 
-          case 69:
+          case 70:
           case "end":
             return _context28.stop();
         }
       }
-    }, _callee28, null, [[6, 59]]);
+    }, _callee28, null, [[6, 60]]);
   }));
 
   return function getChatInfo(_x49, _x50) {
@@ -3139,7 +3140,7 @@ function () {
   var _ref29 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee29(ctx, next) {
-    var _ctx$request$body6, code, orderId, value, otherOpenId, isWarn, result, openid, sql1, poolResult1, receiveOpenId, chooseOtherOpenId, reg, checkedValue, sql2, poolResult2, sql3, poolResult3, id;
+    var _ctx$request$body6, code, orderId, value, otherOpenId, isWarn, result, openid, sql1, poolResult1, receiveOpenId, chooseOtherOpenId, reg, checkedValue, sql2, poolResult2, sql3, poolResult3, id, otherIsOnLine, sql4, poolResult4;
 
     return _regenerator["default"].wrap(function _callee29$(_context29) {
       while (1) {
@@ -3149,7 +3150,7 @@ function () {
             isWarn = false;
 
             if (!code) {
-              _context29.next = 37;
+              _context29.next = 48;
               break;
             }
 
@@ -3168,7 +3169,7 @@ function () {
             poolResult1 = _context29.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context29.next = 28;
+              _context29.next = 39;
               break;
             }
 
@@ -3201,7 +3202,7 @@ function () {
             poolResult2 = _context29.sent;
 
             if (!(poolResult2.affectedRows === 1)) {
-              _context29.next = 28;
+              _context29.next = 39;
               break;
             }
 
@@ -3212,70 +3213,89 @@ function () {
           case 26:
             poolResult3 = _context29.sent;
 
-            if (poolResult3.length == 1) {
-              id = poolResult3[0].id;
-              wss.clients.forEach(function (client) {
-                var chatTime = new Date();
-
-                if (client.openId === openid) {
-                  client.send(JSON.stringify({
-                    status: _userStatus.statusList.success,
-                    chatInfo: [{
-                      type: 0,
-                      chatTime: chatTime,
-                      content: checkedValue,
-                      isWarn: isWarn,
-                      id: id
-                    }]
-                  }));
-                }
-
-                if (client.openId === chooseOtherOpenId) {
-                  client.send(JSON.stringify({
-                    status: _userStatus.statusList.success,
-                    chatInfo: [{
-                      type: 1,
-                      chatTime: chatTime,
-                      content: checkedValue,
-                      isWarn: false,
-                      id: id
-                    }]
-                  }));
-                }
-              });
-              console.log('/sendchatinfo:发送聊天信息成功!');
-              ctx.response.status = _userStatus.statusCodeList.success;
-              ctx.response.body = {
-                status: _userStatus.statusList.success
-              };
+            if (!(poolResult3.length == 1)) {
+              _context29.next = 39;
+              break;
             }
 
-          case 28:
+            id = poolResult3[0].id;
+            otherIsOnLine = false;
+            wss.clients.forEach(function (client) {
+              var chatTime = new Date();
+
+              if (client.openId === openid) {
+                client.send(JSON.stringify({
+                  status: _userStatus.statusList.success,
+                  chatInfo: [{
+                    type: 0,
+                    chatTime: chatTime,
+                    content: checkedValue,
+                    isWarn: isWarn,
+                    id: id
+                  }]
+                }));
+              }
+
+              if (client.openId === chooseOtherOpenId) {
+                otherIsOnLine = true;
+                client.send(JSON.stringify({
+                  status: _userStatus.statusList.success,
+                  chatInfo: [{
+                    type: 1,
+                    chatTime: chatTime,
+                    content: checkedValue,
+                    isWarn: false,
+                    id: id
+                  }]
+                }));
+              }
+            });
+
+            if (otherIsOnLine) {
+              _context29.next = 36;
+              break;
+            }
+
+            sql4 = "UPDATE user_chat_list SET not_view_message_num = not_view_message_num + 1,not_view_open_id = ? WHERE id = ? ";
             _context29.next = 35;
+            return (0, _transformPoolQuery["default"])(sql4, [chooseOtherOpenId, id]);
+
+          case 35:
+            poolResult4 = _context29.sent;
+
+          case 36:
+            console.log('/sendchatinfo:发送聊天信息成功!');
+            ctx.response.status = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: _userStatus.statusList.success
+            };
+
+          case 39:
+            _context29.next = 46;
             break;
 
-          case 30:
-            _context29.prev = 30;
+          case 41:
+            _context29.prev = 41;
             _context29.t0 = _context29["catch"](7);
             console.log('/sendchatinfo:数据库操作失败！', _context29.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/sendchatinfo:数据库操作失败！';
 
-          case 35:
-            _context29.next = 40;
+          case 46:
+            _context29.next = 51;
             break;
 
-          case 37:
+          case 48:
             console.log('/sendchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/sendchatinfo:您请求的用户code有误!';
 
-          case 40:
+          case 51:
           case "end":
             return _context29.stop();
         }
       }
-    }, _callee29, null, [[7, 30]]);
+    }, _callee29, null, [[7, 41]]);
   }));
 
   return function sendChatInfo(_x51, _x52) {
@@ -3468,6 +3488,149 @@ function () {
   };
 }();
 
+var getNotViewMessageNum =
+/*#__PURE__*/
+function () {
+  var _ref32 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee32(ctx, next) {
+    var code, returnDatas, sumMessage, result, openid, sql1, poolResult1;
+    return _regenerator["default"].wrap(function _callee32$(_context32) {
+      while (1) {
+        switch (_context32.prev = _context32.next) {
+          case 0:
+            code = ctx.request.query.code;
+            returnDatas = {
+              sumMessage: 0,
+              datas: []
+            };
+            sumMessage = 0;
+
+            if (!code) {
+              _context32.next = 23;
+              break;
+            }
+
+            _context32.next = 6;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 6:
+            result = _context32.sent;
+            openid = result.openid;
+            _context32.prev = 8;
+            sql1 = "SELECT id,not_view_message_num FROM user_chat_list WHERE not_view_open_id = ? AND not_view_message_num != 0";
+            _context32.next = 12;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 12:
+            poolResult1 = _context32.sent;
+
+            if (poolResult1.length > 0) {
+              poolResult1.map(function (res, index) {
+                var id = res.id;
+                var notViewMessageNum = res.not_view_message_num;
+                sumMessage += notViewMessageNum;
+                returnDatas.datas.push({
+                  id: id,
+                  notViewMessageNum: notViewMessageNum
+                });
+              });
+              returnDatas.sumMessage = sumMessage;
+              console.log("/getnotviewmessagenum:查询未读信息成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            }
+
+            _context32.next = 21;
+            break;
+
+          case 16:
+            _context32.prev = 16;
+            _context32.t0 = _context32["catch"](8);
+            console.log('/getnotviewmessagenum:数据库操作失败！', _context32.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getnotviewmessagenum:数据库操作失败！';
+
+          case 21:
+            _context32.next = 26;
+            break;
+
+          case 23:
+            console.log('/getnotviewmessagenum:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getnotviewmessagenum:您请求的用户code有误!';
+
+          case 26:
+          case "end":
+            return _context32.stop();
+        }
+      }
+    }, _callee32, null, [[8, 16]]);
+  }));
+
+  return function getNotViewMessageNum(_x57, _x58) {
+    return _ref32.apply(this, arguments);
+  };
+}();
+
+var subNotViewMessageNum =
+/*#__PURE__*/
+function () {
+  var _ref33 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee33(ctx, next) {
+    var id, sql1, poolResult1;
+    return _regenerator["default"].wrap(function _callee33$(_context33) {
+      while (1) {
+        switch (_context33.prev = _context33.next) {
+          case 0:
+            id = ctx.request.query.id;
+            _context33.prev = 1;
+            sql1 = "UPDATE  user_chat_list SET not_view_message_num = 0,not_view_open_id = '' WHERE id = ?";
+            _context33.next = 5;
+            return (0, _transformPoolQuery["default"])(sql1, [id]);
+
+          case 5:
+            poolResult1 = _context33.sent;
+
+            if (poolResult1.affectedRows === 1) {
+              console.log("/subnotviewmessagenum:标记已读信息成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            } else {
+              console.log('/subnotviewmessagenum:标记已读信息失败！');
+              ctx.response.status = _userStatus.statusCodeList.fail;
+              ctx.response.body = '/subnotviewmessagenum:标记已读信息失败！';
+            }
+
+            _context33.next = 14;
+            break;
+
+          case 9:
+            _context33.prev = 9;
+            _context33.t0 = _context33["catch"](1);
+            console.log('/subnotviewmessagenum:数据库操作失败！', _context33.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/subnotviewmessagenum:数据库操作失败！';
+
+          case 14:
+          case "end":
+            return _context33.stop();
+        }
+      }
+    }, _callee33, null, [[1, 9]]);
+  }));
+
+  return function subNotViewMessageNum(_x59, _x60) {
+    return _ref33.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -3489,4 +3652,6 @@ app.use(_koaRoute["default"].get('/getcollectlist', getCollectList));
 app.use(_koaRoute["default"].post('/tradingscancode', tradingScanCode));
 app.use(_koaRoute["default"].get('/getchatinfo', getChatInfo));
 app.use(_koaRoute["default"].post('/sendchatinfo', sendChatInfo));
-app.use(_koaRoute["default"].get('/getchatlist', getChatList)); // app.listen(3000)
+app.use(_koaRoute["default"].get('/getchatlist', getChatList));
+app.use(_koaRoute["default"].get('/getnotviewmessagenum', getNotViewMessageNum));
+app.use(_koaRoute["default"].get('/subnotviewmessagenum', subNotViewMessageNum)); // app.listen(3000)
