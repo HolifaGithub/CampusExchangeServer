@@ -757,7 +757,7 @@ const search = async (ctx, next: () => Promise<any>) => {
     const startIndex = (page - 1) * 6
     const returnDatas: ReturnDataObject[] = []
     if (value.length > 0) {
-        const valueArray = value.split(" ")
+        const handleValue = value.replace(/\s*/g,"")
         try {
             const sql1 = `SELECT type_one,type_two,type_three,name_input FROM goods`
             const typeOneNameArray: string[] = []
@@ -781,7 +781,7 @@ const search = async (ctx, next: () => Promise<any>) => {
                     }
                 }
                 // console.log(typeOneNameArray,typeTwoNameArray,typeThreeNameArray,nameInputArray)
-                let searchResult = SearchKeyWord(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart)
+                let searchResult = SearchKeyWord(handleValue, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart)
                 if (searchResult) {
                     const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ${searchResult.col} = ? AND order_status = 'released' LIMIT ?,6;`
                     const poolResult2 = await transformPoolQuery(sql2, [searchResult.value, startIndex])
@@ -818,7 +818,7 @@ const search = async (ctx, next: () => Promise<any>) => {
                         })
                     }).then(() => {
                         console.log("/search:搜索成功！")
-                        ctx.response.statusCode = statusCodeList.success
+                        ctx.response.status = statusCodeList.success
                         ctx.response.body = {
                             status: statusList.success,
                             returnDatas: returnDatas
@@ -831,6 +831,13 @@ const search = async (ctx, next: () => Promise<any>) => {
                         status: statusList.fail,
                         msg: ' /search:搜索结果为空！'
                     }
+                }
+            }else{
+                console.log('/search:商品表为空！')
+                ctx.response.status = statusCodeList.fail
+                ctx.response.body = {
+                    status: statusList.fail,
+                    msg: ' /search:商品表为空！'
                 }
             }
         } catch (err) {
@@ -1681,6 +1688,13 @@ const getNotViewMessageNum = async (ctx, next: () => Promise<any>) => {
                 })
                 returnDatas.sumMessage = sumMessage
                 console.log("/getnotviewmessagenum:查询未读信息成功！")
+                ctx.response.statusCode = statusCodeList.success
+                ctx.response.body = {
+                    status: statusList.success,
+                    returnDatas: returnDatas
+                }
+            }else{
+                console.log("/getnotviewmessagenum:查询未读信息成功,但无未读消息！")
                 ctx.response.statusCode = statusCodeList.success
                 ctx.response.body = {
                     status: statusList.success,

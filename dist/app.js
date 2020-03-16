@@ -1580,7 +1580,7 @@ function () {
   var _ref14 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee15(ctx, next) {
-    var _ctx$request$query4, value, page, searchStart, startIndex, returnDatas, valueArray, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searchResult, sql2, poolResult2;
+    var _ctx$request$query4, value, page, searchStart, startIndex, returnDatas, handleValue, sql1, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, poolResult1, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, row, searchResult, sql2, poolResult2;
 
     return _regenerator["default"].wrap(function _callee15$(_context15) {
       while (1) {
@@ -1591,11 +1591,11 @@ function () {
             returnDatas = [];
 
             if (!(value.length > 0)) {
-              _context15.next = 56;
+              _context15.next = 61;
               break;
             }
 
-            valueArray = value.split(" ");
+            handleValue = value.replace(/\s*/g, "");
             _context15.prev = 5;
             sql1 = "SELECT type_one,type_two,type_three,name_input FROM goods";
             typeOneNameArray = [];
@@ -1609,7 +1609,7 @@ function () {
             poolResult1 = _context15.sent;
 
             if (!(poolResult1.length > 0)) {
-              _context15.next = 47;
+              _context15.next = 49;
               break;
             }
 
@@ -1673,7 +1673,7 @@ function () {
             return _context15.finish(26);
 
           case 34:
-            searchResult = (0, _searchKeyWord["default"])(valueArray, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart);
+            searchResult = (0, _searchKeyWord["default"])(handleValue, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart);
 
             if (!searchResult) {
               _context15.next = 44;
@@ -1749,7 +1749,7 @@ function () {
               }());
             }).then(function () {
               console.log("/search:搜索成功！");
-              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.status = _userStatus.statusCodeList.success;
               ctx.response.body = {
                 status: _userStatus.statusList.success,
                 returnDatas: returnDatas
@@ -1769,31 +1769,43 @@ function () {
             };
 
           case 47:
-            _context15.next = 54;
+            _context15.next = 52;
             break;
 
           case 49:
-            _context15.prev = 49;
+            console.log('/search:商品表为空！');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = {
+              status: _userStatus.statusList.fail,
+              msg: ' /search:商品表为空！'
+            };
+
+          case 52:
+            _context15.next = 59;
+            break;
+
+          case 54:
+            _context15.prev = 54;
             _context15.t1 = _context15["catch"](5);
             console.log('/search:数据库操作失败！', _context15.t1);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:数据库操作失败！';
 
-          case 54:
-            _context15.next = 59;
+          case 59:
+            _context15.next = 64;
             break;
 
-          case 56:
+          case 61:
             console.log('/search:用户的搜索词为空!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:用户的搜索词为空!';
 
-          case 59:
+          case 64:
           case "end":
             return _context15.stop();
         }
       }
-    }, _callee15, null, [[5, 49], [18, 22, 26, 34], [27,, 29, 33]]);
+    }, _callee15, null, [[5, 54], [18, 22, 26, 34], [27,, 29, 33]]);
   }));
 
   return function search(_x25, _x26) {
@@ -2925,7 +2937,7 @@ function () {
             _ctx$request$query8 = ctx.request.query, code = _ctx$request$query8.code, orderId = _ctx$request$query8.orderId, getChatInfoStartTime = _ctx$request$query8.getChatInfoStartTime, otherOpenId = _ctx$request$query8.otherOpenId;
 
             if (!code) {
-              _context28.next = 67;
+              _context28.next = 66;
               break;
             }
 
@@ -2944,7 +2956,7 @@ function () {
             poolResult1 = _context28.sent;
 
             if (!(poolResult1.length === 1)) {
-              _context28.next = 58;
+              _context28.next = 57;
               break;
             }
 
@@ -2977,7 +2989,7 @@ function () {
             }
 
             if (!(getChatInfoStartTime && getChatInfoStartTime.length > 0)) {
-              _context28.next = 28;
+              _context28.next = 27;
               break;
             }
 
@@ -2987,7 +2999,6 @@ function () {
 
           case 23:
             poolResult2 = _context28.sent;
-            console.log(poolResult2);
 
             if (poolResult2.length > 0) {
               for (i = 0; i < poolResult2.length; i++) {
@@ -3010,15 +3021,15 @@ function () {
               }
             }
 
-            _context28.next = 33;
+            _context28.next = 32;
             break;
 
-          case 28:
+          case 27:
             _sql11 = "SELECT send_open_id ,chat_time,content FROM user_chat WHERE ((send_open_id = ? AND receive_open_id = ?) OR (send_open_id = ? AND receive_open_id = ? ))  AND order_id = ? ORDER BY chat_time ASC ";
-            _context28.next = 31;
+            _context28.next = 30;
             return (0, _transformPoolQuery["default"])(_sql11, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId]);
 
-          case 31:
+          case 30:
             _poolResult11 = _context28.sent;
 
             if (_poolResult11.length > 0) {
@@ -3042,54 +3053,54 @@ function () {
               }
             }
 
-          case 33:
+          case 32:
             sql3 = "SELECT nick_name,avatar_url FROM user_info WHERE open_id = ?";
-            _context28.next = 36;
+            _context28.next = 35;
             return (0, _transformPoolQuery["default"])(sql3, [chooseOtherOpenId]);
 
-          case 36:
+          case 35:
             poolResult3 = _context28.sent;
 
             if (!(poolResult3.length === 1)) {
-              _context28.next = 58;
+              _context28.next = 57;
               break;
             }
 
             chatNickName = poolResult3[0].nick_name;
             chatAvatarUrl = poolResult3[0].avatar_url;
             sql4 = "SELECT avatar_url FROM user_info WHERE open_id = ?";
-            _context28.next = 43;
+            _context28.next = 42;
             return (0, _transformPoolQuery["default"])(sql4, [openid]);
 
-          case 43:
+          case 42:
             poolResult4 = _context28.sent;
 
             if (!(poolResult4.length === 1)) {
-              _context28.next = 58;
+              _context28.next = 57;
               break;
             }
 
             myAvatarUrl = poolResult4[0].avatar_url;
             sql5 = "SELECT * FROM user_chat_list WHERE ((chat_one_open_id = ? AND chat_two_open_id = ?) OR (chat_one_open_id = ? AND chat_two_open_id = ?)) AND order_id = ?";
-            _context28.next = 49;
+            _context28.next = 48;
             return (0, _transformPoolQuery["default"])(sql5, [openid, chooseOtherOpenId, chooseOtherOpenId, openid, orderId]);
 
-          case 49:
+          case 48:
             poolResult5 = _context28.sent;
 
             if (!(poolResult5.length === 0)) {
-              _context28.next = 55;
+              _context28.next = 54;
               break;
             }
 
             sql6 = "INSERT INTO user_chat_list(chat_one_open_id,chat_two_open_id,order_id) VALUES (?,?,?)";
-            _context28.next = 54;
+            _context28.next = 53;
             return (0, _transformPoolQuery["default"])(sql6, [openid, chooseOtherOpenId, orderId]);
 
-          case 54:
+          case 53:
             poolResult6 = _context28.sent;
 
-          case 55:
+          case 54:
             console.log('/getchatinfo:获取聊天内容页数据成功');
             ctx.response.status = _userStatus.statusCodeList.success;
             ctx.response.body = {
@@ -3101,32 +3112,32 @@ function () {
               myAvatarUrl: myAvatarUrl
             };
 
-          case 58:
-            _context28.next = 65;
+          case 57:
+            _context28.next = 64;
             break;
 
-          case 60:
-            _context28.prev = 60;
+          case 59:
+            _context28.prev = 59;
             _context28.t0 = _context28["catch"](6);
             console.log('/getchatinfo:数据库操作失败！', _context28.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:数据库操作失败！';
 
-          case 65:
-            _context28.next = 70;
+          case 64:
+            _context28.next = 69;
             break;
 
-          case 67:
+          case 66:
             console.log('/getchatinfo:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/getchatinfo:您请求的用户code有误!';
 
-          case 70:
+          case 69:
           case "end":
             return _context28.stop();
         }
       }
-    }, _callee28, null, [[6, 60]]);
+    }, _callee28, null, [[6, 59]]);
   }));
 
   return function getChatInfo(_x49, _x50) {
@@ -3537,6 +3548,13 @@ function () {
               });
               returnDatas.sumMessage = sumMessage;
               console.log("/getnotviewmessagenum:查询未读信息成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            } else {
+              console.log("/getnotviewmessagenum:查询未读信息成功,但无未读消息！");
               ctx.response.statusCode = _userStatus.statusCodeList.success;
               ctx.response.body = {
                 status: _userStatus.statusList.success,
