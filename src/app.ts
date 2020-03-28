@@ -1789,7 +1789,7 @@ interface GetSchoolfellowZoomList {
 }
 const getSchoolfellowZoomList = async (ctx, next: () => Promise<any>) => {
     const { code,page} = ctx.request.query
-    const startIndex = (page - 1) * 8
+    const startIndex = (page - 1) * 6
     let returnDatas: GetSchoolfellowZoomList[] = []
     if (code) {
         const result = await getOpenIdAndSessionKey(code)
@@ -1799,7 +1799,7 @@ const getSchoolfellowZoomList = async (ctx, next: () => Promise<any>) => {
             const poolResult1 = await transformPoolQuery(sql1, [openid])
             if (poolResult1.length === 1 ) {
                 const school =poolResult1[0].school
-                const sql2 =`SELECT * FROM schoolfellow_zoom_list WHERE school = ?  limit ?,6`
+                const sql2 =`SELECT * FROM schoolfellow_zoom_list WHERE school = ? ORDER BY publish_time DESC  limit ?,6`
                 const poolResult2 = await transformPoolQuery(sql2, [school,startIndex])
                 if(poolResult2.length>0){
                     for(let i = 0;i<poolResult2.length;i++){

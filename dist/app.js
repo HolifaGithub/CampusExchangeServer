@@ -3652,6 +3652,207 @@ function () {
   };
 }();
 
+var publishSchoolfellowZoom =
+/*#__PURE__*/
+function () {
+  var _ref34 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee34(ctx, next) {
+    var _ctx$request$body7, code, publishContent, result, openid, sql1, poolResult1, nickName, avatarUrl, school, sql2, poolResult2;
+
+    return _regenerator["default"].wrap(function _callee34$(_context34) {
+      while (1) {
+        switch (_context34.prev = _context34.next) {
+          case 0:
+            _ctx$request$body7 = ctx.request.body, code = _ctx$request$body7.code, publishContent = _ctx$request$body7.publishContent;
+
+            if (!code) {
+              _context34.next = 29;
+              break;
+            }
+
+            _context34.next = 4;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 4:
+            result = _context34.sent;
+            openid = result.openid;
+            _context34.prev = 6;
+            sql1 = "SELECT nick_name,avatar_url,school FROM user_info WHERE open_id =?";
+            _context34.next = 10;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 10:
+            poolResult1 = _context34.sent;
+
+            if (!(poolResult1.length === 1)) {
+              _context34.next = 20;
+              break;
+            }
+
+            nickName = poolResult1[0].nick_name;
+            avatarUrl = poolResult1[0].avatar_url;
+            school = poolResult1[0].school;
+            sql2 = "INSERT INTO schoolfellow_zoom_list(open_id,avatar_url,nick_name,school,publish_time,publish_content) VALUES (?,?,?,?,now(),?)";
+            _context34.next = 18;
+            return (0, _transformPoolQuery["default"])(sql2, [openid, avatarUrl, nickName, school, publishContent]);
+
+          case 18:
+            poolResult2 = _context34.sent;
+
+            if (poolResult2.affectedRows === 1) {
+              console.log("/publishschoolfellowzoom:发表校友圈成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success
+              };
+            }
+
+          case 20:
+            _context34.next = 27;
+            break;
+
+          case 22:
+            _context34.prev = 22;
+            _context34.t0 = _context34["catch"](6);
+            console.log('/publishschoolfellowzoom:数据库操作失败！', _context34.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/publishschoolfellowzoom:数据库操作失败！';
+
+          case 27:
+            _context34.next = 32;
+            break;
+
+          case 29:
+            console.log('/publishschoolfellowzoom:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/publishschoolfellowzoom:您请求的用户code有误!';
+
+          case 32:
+          case "end":
+            return _context34.stop();
+        }
+      }
+    }, _callee34, null, [[6, 22]]);
+  }));
+
+  return function publishSchoolfellowZoom(_x61, _x62) {
+    return _ref34.apply(this, arguments);
+  };
+}();
+
+var getSchoolfellowZoomList =
+/*#__PURE__*/
+function () {
+  var _ref35 = (0, _asyncToGenerator2["default"])(
+  /*#__PURE__*/
+  _regenerator["default"].mark(function _callee35(ctx, next) {
+    var _ctx$request$query10, code, page, startIndex, returnDatas, result, openid, sql1, poolResult1, school, sql2, poolResult2, i, id, avatarUrl, nickName, time, publishContent;
+
+    return _regenerator["default"].wrap(function _callee35$(_context35) {
+      while (1) {
+        switch (_context35.prev = _context35.next) {
+          case 0:
+            _ctx$request$query10 = ctx.request.query, code = _ctx$request$query10.code, page = _ctx$request$query10.page;
+            startIndex = (page - 1) * 6;
+            returnDatas = [];
+
+            if (!code) {
+              _context35.next = 29;
+              break;
+            }
+
+            _context35.next = 6;
+            return (0, _getOpenIdAndSessionKey["default"])(code);
+
+          case 6:
+            result = _context35.sent;
+            openid = result.openid;
+            _context35.prev = 8;
+            sql1 = "SELECT school FROM user_info WHERE open_id = ?";
+            _context35.next = 12;
+            return (0, _transformPoolQuery["default"])(sql1, [openid]);
+
+          case 12:
+            poolResult1 = _context35.sent;
+
+            if (!(poolResult1.length === 1)) {
+              _context35.next = 20;
+              break;
+            }
+
+            school = poolResult1[0].school;
+            sql2 = "SELECT * FROM schoolfellow_zoom_list WHERE school = ? ORDER BY publish_time DESC  limit ?,6";
+            _context35.next = 18;
+            return (0, _transformPoolQuery["default"])(sql2, [school, startIndex]);
+
+          case 18:
+            poolResult2 = _context35.sent;
+
+            if (poolResult2.length > 0) {
+              for (i = 0; i < poolResult2.length; i++) {
+                id = poolResult2[i].id;
+                avatarUrl = poolResult2[i].avatar_url;
+                nickName = poolResult2[i].nick_name;
+                time = poolResult2[i].publish_time;
+                publishContent = poolResult2[i].publish_content;
+                returnDatas.push({
+                  id: id,
+                  avatarUrl: avatarUrl,
+                  nickName: nickName,
+                  time: time,
+                  publishContent: publishContent
+                });
+              }
+
+              console.log("/getshschoolfellowzoomlist:获取校友圈成功！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            } else {
+              console.log("/getshschoolfellowzoomlist:获取校友圈成功，但无数据！");
+              ctx.response.statusCode = _userStatus.statusCodeList.success;
+              ctx.response.body = {
+                status: _userStatus.statusList.success,
+                returnDatas: returnDatas
+              };
+            }
+
+          case 20:
+            _context35.next = 27;
+            break;
+
+          case 22:
+            _context35.prev = 22;
+            _context35.t0 = _context35["catch"](8);
+            console.log('/getshschoolfellowzoomlist:数据库操作失败！', _context35.t0);
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getshschoolfellowzoomlist:数据库操作失败！';
+
+          case 27:
+            _context35.next = 32;
+            break;
+
+          case 29:
+            console.log('/getshschoolfellowzoomlist:您请求的用户code有误!');
+            ctx.response.status = _userStatus.statusCodeList.fail;
+            ctx.response.body = '/getshschoolfellowzoomlist:您请求的用户code有误!';
+
+          case 32:
+          case "end":
+            return _context35.stop();
+        }
+      }
+    }, _callee35, null, [[8, 22]]);
+  }));
+
+  return function getSchoolfellowZoomList(_x63, _x64) {
+    return _ref35.apply(this, arguments);
+  };
+}();
+
 app.use(_koaRoute["default"].post('/login', login));
 app.use(_koaRoute["default"].post('/register', register));
 app.use(_koaRoute["default"].post('/releasegoods', releaseGoods));
@@ -3675,4 +3876,6 @@ app.use(_koaRoute["default"].get('/getchatinfo', getChatInfo));
 app.use(_koaRoute["default"].post('/sendchatinfo', sendChatInfo));
 app.use(_koaRoute["default"].get('/getchatlist', getChatList));
 app.use(_koaRoute["default"].get('/getnotviewmessagenum', getNotViewMessageNum));
-app.use(_koaRoute["default"].get('/subnotviewmessagenum', subNotViewMessageNum)); // app.listen(3000)
+app.use(_koaRoute["default"].get('/subnotviewmessagenum', subNotViewMessageNum));
+app.use(_koaRoute["default"].post('/publishschoolfellowzoom', publishSchoolfellowZoom));
+app.use(_koaRoute["default"].get('/getshschoolfellowzoomlist', getSchoolfellowZoomList)); // app.listen(3000)
