@@ -64,8 +64,8 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
         const { openid, session_key } = result
         if (openid && session_key) {
             //通过传入rawData和session_key组成校验字符串传入sha1算法函数里校验服务端得到的signature2与客户端传来的signature是否相同
-            const checkSignatureResult = checkSignature(signature, rawData, session_key)
-            if (checkSignatureResult) {
+            // const checkSignatureResult = checkSignature(signature, rawData, session_key)
+            // if (checkSignatureResult) {
                 //如果签名一致有效，则调用加密数据解密算法解密出用户的开放数据
                 var pc = new WXBizDataCrypt(appId, session_key)
                 var openData = pc.decryptData(encryptedData, iv)
@@ -144,11 +144,11 @@ const login = async (ctx: Koa.Context, next: () => Promise<any>) => {
                     ctx.response.status = statusCodeList.fail
                     ctx.response.body = '/login:数据库操作失败！'
                 }
-            } else {
-                console.log('/login:您的签名signature有误!')
-                ctx.response.status = statusCodeList.fail
-                ctx.response.body = '/login:您的签名signature有误!'
-            }
+            // } else {
+            //     console.log('/login:您的签名signature有误!')
+            //     ctx.response.status = statusCodeList.fail
+            //     ctx.response.body = '/login:您的签名signature有误!'
+            // }
         }
     } else {
         console.log('/login:您请求的用户code有误!')
@@ -785,45 +785,55 @@ const search = async (ctx, next: () => Promise<any>) => {
                 if (searchResult) {
                     const sql2 = `SELECT order_id,open_id,name_input,new_and_old_degree,mode,object_of_payment,pay_for_me_price,pay_for_other_price,want_exchange_goods,pics_location,watched_people FROM goods WHERE ${searchResult.col} = ? AND order_status = 'released' LIMIT ?,6;`
                     const poolResult2 = await transformPoolQuery(sql2, [searchResult.value, startIndex])
-                    await new Promise((resolve, reject) => {
-                        poolResult2.map(async (data) => {
-                            const sql3 = `SELECT nick_name,avatar_url from user_info WHERE open_id =?`
-                            const poolResult3 = await transformPoolQuery(sql3, [data.open_id])
-                            if (poolResult3.length === 1) {
-                                let topPicSrc
-                                const len = data.pics_location.length
-                                if (len === 0) {
-                                    topPicSrc = ''
-                                } else {
-                                    topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                    if(poolResult2.length>0){
+                        await new Promise((resolve, reject) => {
+                            poolResult2.map(async (data) => {
+                                const sql3 = `SELECT nick_name,avatar_url from user_info WHERE open_id =?`
+                                const poolResult3 = await transformPoolQuery(sql3, [data.open_id])
+                                if (poolResult3.length === 1) {
+                                    let topPicSrc
+                                    const len = data.pics_location.length
+                                    if (len === 0) {
+                                        topPicSrc = ''
+                                    } else {
+                                        topPicSrc = 'https://' + data.pics_location.split(';')[0]
+                                    }
+                                    returnDatas.push({
+                                        orderId: data.order_id,
+                                        nameInput: data.name_input,
+                                        newAndOldDegree: data.new_and_old_degree,
+                                        mode: data.mode,
+                                        objectOfPayment: data.object_of_payment,
+                                        payForMePrice: data.pay_for_me_price,
+                                        payForOtherPrice: data.pay_for_other_price,
+                                        wantExchangeGoods: data.want_exchange_goods,
+                                        topPicSrc: topPicSrc,
+                                        watchedPeople: data.watched_people,
+                                        nickName: poolResult3[0].nick_name,
+                                        avatarUrl: poolResult3[0].avatar_url
+                                    })
                                 }
-                                returnDatas.push({
-                                    orderId: data.order_id,
-                                    nameInput: data.name_input,
-                                    newAndOldDegree: data.new_and_old_degree,
-                                    mode: data.mode,
-                                    objectOfPayment: data.object_of_payment,
-                                    payForMePrice: data.pay_for_me_price,
-                                    payForOtherPrice: data.pay_for_other_price,
-                                    wantExchangeGoods: data.want_exchange_goods,
-                                    topPicSrc: topPicSrc,
-                                    watchedPeople: data.watched_people,
-                                    nickName: poolResult3[0].nick_name,
-                                    avatarUrl: poolResult3[0].avatar_url
-                                })
-                            }
-                            if (returnDatas.length === poolResult2.length) {
-                                resolve()
+                                if (returnDatas.length === poolResult2.length) {
+                                    resolve()
+                                }
+                            })
+                        }).then(() => {
+                            console.log("/search:搜索成功！")
+                            ctx.response.status = statusCodeList.success
+                            ctx.response.body = {
+                                status: statusList.success,
+                                returnDatas: returnDatas
                             }
                         })
-                    }).then(() => {
-                        console.log("/search:搜索成功！")
+                    }else{
+                        console.log('/search:没有更多数据了!')
                         ctx.response.status = statusCodeList.success
                         ctx.response.body = {
                             status: statusList.success,
+                            msg: ' /search:没有更多数据了!',
                             returnDatas: returnDatas
                         }
-                    })
+                    }
                 } else {
                     console.log('/search:搜索结果为空！')
                     ctx.response.status = statusCodeList.fail

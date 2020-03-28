@@ -14,8 +14,6 @@ var _fs = _interopRequireDefault(require("fs"));
 
 var _path = _interopRequireDefault(require("path"));
 
-var _checkSignature = require("./utils/check-signature");
-
 var _WXBizDataCrypt = require("./utils/WXBizDataCrypt");
 
 var _transformPoolQuery = _interopRequireDefault(require("./utils/transformPoolQuery"));
@@ -105,7 +103,7 @@ function () {
   var _ref2 = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
   _regenerator["default"].mark(function _callee2(ctx, next) {
-    var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, checkSignatureResult, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3, sql4, result4, sql5, result5, sql6, result6;
+    var isNewUser, isDeleteSuccess, requestBody, code, rawData, signature, encryptedData, iv, result, openid, session_key, pc, openData, nickName, gender, country, province, city, avatarUrl, sql1, result1, sql2, result2, sql3, result3, sql4, result4, sql5, result5, sql6, result6;
     return _regenerator["default"].wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
@@ -115,7 +113,7 @@ function () {
             requestBody = ctx.request.body;
 
             if (!requestBody.code) {
-              _context2.next = 64;
+              _context2.next = 57;
               break;
             }
 
@@ -128,30 +126,25 @@ function () {
             openid = result.openid, session_key = result.session_key;
 
             if (!(openid && session_key)) {
-              _context2.next = 62;
+              _context2.next = 55;
               break;
             }
 
             //通过传入rawData和session_key组成校验字符串传入sha1算法函数里校验服务端得到的signature2与客户端传来的signature是否相同
-            checkSignatureResult = (0, _checkSignature.checkSignature)(signature, rawData, session_key);
-
-            if (!checkSignatureResult) {
-              _context2.next = 59;
-              break;
-            }
-
+            // const checkSignatureResult = checkSignature(signature, rawData, session_key)
+            // if (checkSignatureResult) {
             //如果签名一致有效，则调用加密数据解密算法解密出用户的开放数据
             pc = new _WXBizDataCrypt.WXBizDataCrypt(_miniProgramInfo.appId, session_key);
             openData = pc.decryptData(encryptedData, iv);
             nickName = openData.nickName, gender = openData.gender, country = openData.country, province = openData.province, city = openData.city, avatarUrl = openData.avatarUrl; // console.log('解密后 data: ', openData)
 
-            _context2.prev = 15;
+            _context2.prev = 13;
             //1.先去查询数据库是否有该用户的记录，如果没有则是新用户，如果有就是老用户
             sql1 = "select * from user_info where open_id = ?;";
-            _context2.next = 19;
+            _context2.next = 17;
             return (0, _transformPoolQuery["default"])(sql1, [openid]);
 
-          case 19:
+          case 17:
             result1 = _context2.sent;
 
             if (result1.length === 0) {
@@ -161,15 +154,15 @@ function () {
             }
 
             if (!isNewUser) {
-              _context2.next = 32;
+              _context2.next = 30;
               break;
             }
 
             sql2 = "INSERT INTO user_money(open_id) VALUES (?)";
-            _context2.next = 25;
+            _context2.next = 23;
             return (0, _transformPoolQuery["default"])(sql2, [openid]);
 
-          case 25:
+          case 23:
             result2 = _context2.sent;
 
             if (result2.affectedRows === 1) {
@@ -179,10 +172,10 @@ function () {
             }
 
             sql3 = "INSERT INTO user_order(open_id) VALUES (?)";
-            _context2.next = 30;
+            _context2.next = 28;
             return (0, _transformPoolQuery["default"])(sql3, [openid]);
 
-          case 30:
+          case 28:
             result3 = _context2.sent;
 
             if (result3.affectedRows === 1) {
@@ -191,17 +184,17 @@ function () {
               console.log("/login:\u7528\u6237\uFF1A".concat(nickName, "\u7684openid\u6570\u636E\u63D2\u5165user_order\u5931\u8D25\uFF01"));
             }
 
-          case 32:
+          case 30:
             if (isNewUser) {
-              _context2.next = 38;
+              _context2.next = 36;
               break;
             }
 
             sql4 = "UPDATE user_info SET nick_name='',gender=0 ,country='',province='',city='',avatar_url='' WHERE open_id = ?;";
-            _context2.next = 36;
+            _context2.next = 34;
             return (0, _transformPoolQuery["default"])(sql4, [openid]);
 
-          case 36:
+          case 34:
             result4 = _context2.sent;
 
             if (result4.affectedRows === 1) {
@@ -210,17 +203,17 @@ function () {
               isDeleteSuccess = false;
             }
 
-          case 38:
+          case 36:
             if (!(!isNewUser && isDeleteSuccess)) {
-              _context2.next = 44;
+              _context2.next = 42;
               break;
             }
 
             sql5 = "UPDATE  user_info SET nick_name=?,gender=?,country=?,province=?,city=?,avatar_url=? WHERE open_id = ?;";
-            _context2.next = 42;
+            _context2.next = 40;
             return (0, _transformPoolQuery["default"])(sql5, [nickName, gender, country, province, city, avatarUrl, openid]);
 
-          case 42:
+          case 40:
             result5 = _context2.sent;
 
             if (result5.affectedRows === 1) {
@@ -236,17 +229,17 @@ function () {
               ctx.response.body = '数据库操作失败！';
             }
 
-          case 44:
+          case 42:
             if (!isNewUser) {
-              _context2.next = 50;
+              _context2.next = 48;
               break;
             }
 
             sql6 = "INSERT INTO  user_info(open_id,nick_name,gender,country,province,city,avatar_url) VALUES (?,?,?,?,?,?,?);";
-            _context2.next = 48;
+            _context2.next = 46;
             return (0, _transformPoolQuery["default"])(sql6, [openid, nickName, gender, country, province, city, avatarUrl]);
 
-          case 48:
+          case 46:
             result6 = _context2.sent;
 
             if (result6.affectedRows === 1) {
@@ -262,41 +255,32 @@ function () {
               ctx.response.body = '数据库操作失败！';
             }
 
-          case 50:
-            _context2.next = 57;
+          case 48:
+            _context2.next = 55;
             break;
 
-          case 52:
-            _context2.prev = 52;
-            _context2.t0 = _context2["catch"](15);
+          case 50:
+            _context2.prev = 50;
+            _context2.t0 = _context2["catch"](13);
             console.log('/login:数据库操作失败！', _context2.t0);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:数据库操作失败！';
 
+          case 55:
+            _context2.next = 60;
+            break;
+
           case 57:
-            _context2.next = 62;
-            break;
-
-          case 59:
-            console.log('/login:您的签名signature有误!');
-            ctx.response.status = _userStatus.statusCodeList.fail;
-            ctx.response.body = '/login:您的签名signature有误!';
-
-          case 62:
-            _context2.next = 67;
-            break;
-
-          case 64:
             console.log('/login:您请求的用户code有误!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/login:您请求的用户code有误!';
 
-          case 67:
+          case 60:
           case "end":
             return _context2.stop();
         }
       }
-    }, _callee2, null, [[15, 52]]);
+    }, _callee2, null, [[13, 50]]);
   }));
 
   return function login(_x2, _x3) {
@@ -1591,7 +1575,7 @@ function () {
             returnDatas = [];
 
             if (!(value.length > 0)) {
-              _context15.next = 61;
+              _context15.next = 67;
               break;
             }
 
@@ -1609,7 +1593,7 @@ function () {
             poolResult1 = _context15.sent;
 
             if (!(poolResult1.length > 0)) {
-              _context15.next = 49;
+              _context15.next = 55;
               break;
             }
 
@@ -1676,7 +1660,7 @@ function () {
             searchResult = (0, _searchKeyWord["default"])(handleValue, typeOneNameArray, typeTwoNameArray, typeThreeNameArray, nameInputArray, searchStart);
 
             if (!searchResult) {
-              _context15.next = 44;
+              _context15.next = 50;
               break;
             }
 
@@ -1686,7 +1670,13 @@ function () {
 
           case 39:
             poolResult2 = _context15.sent;
-            _context15.next = 42;
+
+            if (!(poolResult2.length > 0)) {
+              _context15.next = 45;
+              break;
+            }
+
+            _context15.next = 43;
             return new Promise(function (resolve, reject) {
               poolResult2.map(
               /*#__PURE__*/
@@ -1756,11 +1746,24 @@ function () {
               };
             });
 
-          case 42:
-            _context15.next = 47;
+          case 43:
+            _context15.next = 48;
             break;
 
-          case 44:
+          case 45:
+            console.log('/search:没有更多数据了!');
+            ctx.response.status = _userStatus.statusCodeList.success;
+            ctx.response.body = {
+              status: _userStatus.statusList.success,
+              msg: ' /search:没有更多数据了!',
+              returnDatas: returnDatas
+            };
+
+          case 48:
+            _context15.next = 53;
+            break;
+
+          case 50:
             console.log('/search:搜索结果为空！');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = {
@@ -1768,11 +1771,11 @@ function () {
               msg: ' /search:搜索结果为空！'
             };
 
-          case 47:
-            _context15.next = 52;
+          case 53:
+            _context15.next = 58;
             break;
 
-          case 49:
+          case 55:
             console.log('/search:商品表为空！');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = {
@@ -1780,32 +1783,32 @@ function () {
               msg: ' /search:商品表为空！'
             };
 
-          case 52:
-            _context15.next = 59;
+          case 58:
+            _context15.next = 65;
             break;
 
-          case 54:
-            _context15.prev = 54;
+          case 60:
+            _context15.prev = 60;
             _context15.t1 = _context15["catch"](5);
             console.log('/search:数据库操作失败！', _context15.t1);
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:数据库操作失败！';
 
-          case 59:
-            _context15.next = 64;
+          case 65:
+            _context15.next = 70;
             break;
 
-          case 61:
+          case 67:
             console.log('/search:用户的搜索词为空!');
             ctx.response.status = _userStatus.statusCodeList.fail;
             ctx.response.body = '/search:用户的搜索词为空!';
 
-          case 64:
+          case 70:
           case "end":
             return _context15.stop();
         }
       }
-    }, _callee15, null, [[5, 54], [18, 22, 26, 34], [27,, 29, 33]]);
+    }, _callee15, null, [[5, 60], [18, 22, 26, 34], [27,, 29, 33]]);
   }));
 
   return function search(_x25, _x26) {
