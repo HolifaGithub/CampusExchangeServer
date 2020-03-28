@@ -98,5 +98,16 @@ CREATE TABLE user_chat_list(
      not_view_open_id  VARCHAR(30) NOT NULL
 );
 
+DROP TABLE IF EXISTS schoolfellow_zoom_list;
+CREATE TABLE schoolfellow_zoom_list(
+     id INT(20) PRIMARY KEY  AUTO_INCREMENT,
+     open_id VARCHAR(30) NOT NULL,
+     avatar_url TEXT NOT NULL,
+     nick_name VARCHAR(20) NOT NULL,
+     school VARCHAR(20) NOT NULL,
+     publish_time  DATETIME,
+     publish_content VARCHAR(200) NOT NULL
+);
+
 
 

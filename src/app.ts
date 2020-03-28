@@ -1745,6 +1745,103 @@ const subNotViewMessageNum = async (ctx, next: () => Promise<any>) => {
             ctx.response.body = '/subnotviewmessagenum:数据库操作失败！'
         }
 }
+
+
+const publishSchoolfellowZoom = async (ctx, next: () => Promise<any>) => {
+    const { code,publishContent } = ctx.request.body
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 =`SELECT nick_name,avatar_url,school FROM user_info WHERE open_id =?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if(poolResult1.length===1){
+                const nickName = poolResult1[0].nick_name
+                const avatarUrl = poolResult1[0].avatar_url
+                const school = poolResult1[0].school
+                const sql2 =`INSERT INTO schoolfellow_zoom_list(open_id,avatar_url,nick_name,school,publish_time,publish_content) VALUES (?,?,?,?,now(),?)`
+                const poolResult2 = await transformPoolQuery(sql2, [openid,avatarUrl,nickName,school,publishContent])
+                if (poolResult2.affectedRows === 1 ) {
+                    console.log("/publishschoolfellowzoom:发表校友圈成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success
+                    }
+                }
+            }
+        }catch(err){
+            console.log('/publishschoolfellowzoom:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/publishschoolfellowzoom:数据库操作失败！'
+        }
+    }else {
+        console.log('/publishschoolfellowzoom:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/publishschoolfellowzoom:您请求的用户code有误!'
+    }
+}
+interface GetSchoolfellowZoomList {
+    id: number;
+    avatarUrl: string;
+    nickName: string;
+    publishContent: string;
+    time: string;
+}
+const getSchoolfellowZoomList = async (ctx, next: () => Promise<any>) => {
+    const { code,page} = ctx.request.query
+    const startIndex = (page - 1) * 8
+    let returnDatas: GetSchoolfellowZoomList[] = []
+    if (code) {
+        const result = await getOpenIdAndSessionKey(code)
+        const { openid } = result
+        try {
+            const sql1 =`SELECT school FROM user_info WHERE open_id = ?`
+            const poolResult1 = await transformPoolQuery(sql1, [openid])
+            if (poolResult1.length === 1 ) {
+                const school =poolResult1[0].school
+                const sql2 =`SELECT * FROM schoolfellow_zoom_list WHERE school = ?  limit ?,6`
+                const poolResult2 = await transformPoolQuery(sql2, [school,startIndex])
+                if(poolResult2.length>0){
+                    for(let i = 0;i<poolResult2.length;i++){
+                        const id =poolResult2[i].id
+                        const avatarUrl=poolResult2[i].avatar_url
+                        const nickName=poolResult2[i].nick_name
+                        const time =poolResult2[i].publish_time
+                        const publishContent =poolResult2[i].publish_content
+                        returnDatas.push({
+                            id,
+                            avatarUrl,
+                            nickName,
+                            time,
+                            publishContent
+                        })
+                    }
+                    console.log("/getshschoolfellowzoomlist:获取校友圈成功！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                        returnDatas
+                    } 
+                }else{
+                    console.log("/getshschoolfellowzoomlist:获取校友圈成功，但无数据！")
+                    ctx.response.statusCode = statusCodeList.success
+                    ctx.response.body = {
+                        status: statusList.success,
+                        returnDatas
+                    } 
+                }
+            }
+        }catch(err){
+            console.log('/getshschoolfellowzoomlist:数据库操作失败！', err)
+            ctx.response.status = statusCodeList.fail
+            ctx.response.body = '/getshschoolfellowzoomlist:数据库操作失败！'
+        }
+    }else {
+        console.log('/getshschoolfellowzoomlist:您请求的用户code有误!')
+        ctx.response.status = statusCodeList.fail
+        ctx.response.body = '/getshschoolfellowzoomlist:您请求的用户code有误!'
+    }
+}
 app.use(route.post('/login', login))
 app.use(route.post('/register', register))
 app.use(route.post('/releasegoods', releaseGoods))
@@ -1769,4 +1866,6 @@ app.use(route.post('/sendchatinfo', sendChatInfo))
 app.use(route.get('/getchatlist', getChatList))
 app.use(route.get('/getnotviewmessagenum', getNotViewMessageNum))
 app.use(route.get('/subnotviewmessagenum', subNotViewMessageNum))
+app.use(route.post('/publishschoolfellowzoom', publishSchoolfellowZoom))
+app.use(route.get('/getshschoolfellowzoomlist', getSchoolfellowZoomList))
 // app.listen(3000)
